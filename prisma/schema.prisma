@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Product {
+  id        String  @id
+  name      String
+  nameZh    String
+  flavorEn  String
+  flavorZh  String
+  blurb     String
+  blurbZh   String
+  notes     String  // Stored as JSON string
+  notesZh   String  // Stored as JSON string
+  options   String  // Stored as JSON string
+  tone      String
+  cap       String
+  available Boolean @default(true)
+}
+
+model Bundle {
+  id       String  @id
+  title    String
+  titleZh  String
+  qty      Int
+  price    Float
+  featured Boolean @default(false)
+  note     String
+  noteZh   String
+}
+
+model DeliveryConfig {
+  id            Int    @id @default(1)
+  freeThreshold Float
+  baseFee       Float
+  note          String
+}
+
+model DeliverySlot {
+  id         Int    @id @default(autoincrement())
+  text       String
+  orderIndex Int    @default(0)
+}
+
+model DeliveryZone {
+  id     String @id
+  name   String
+  nameZh String
+  fee    Float
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  num             String   @unique
+  customerDetails String   // JSON string
+  slot            String
+  zoneId          String
+  subtotal        Float
+  deliveryFee     Float
+  total           Float
+  status          String   @default("pending") // pending, paid
+  method          String   // card, paynow
+  items           String   // JSON string
+  createdAt       DateTime @default(now())
+}
