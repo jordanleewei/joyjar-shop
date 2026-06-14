@@ -27,7 +27,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
   const [mounted, setMounted] = useState(false);
 
   const [form, setForm] = useState({ name: "", phone: "", email: "", addr: "", unit: "", postal: "", note: "" });
-  const [slot, setSlot] = useState(slots[0]?.label || "");
+  const [slot, setSlot] = useState(slots[0]?.text || "");
   const [zoneId, setZoneId] = useState(zones[0]?.id);
   const [pay, setPay] = useState("card");
   const [card, setCard] = useState({ num: "", exp: "", cvc: "" });
@@ -138,7 +138,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               <span className="opt-label">Preferred window · 時段</span>
               <div className="slot-row">
                 {slots.map((s: any) => (
-                  <button key={s.id} data-nofish="1" className={`slot ${slot === s.label ? "is-on" : ""}`} onClick={() => setSlot(s.label)}>{s.label}</button>
+                  <button key={s.id} data-nofish="1" className={`slot ${slot === s.text ? "is-on" : ""}`} onClick={() => setSlot(s.text)}>{s.text}</button>
                 ))}
               </div>
               <Field label="Note for delivery" zh="備註" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide />

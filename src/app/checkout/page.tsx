@@ -9,8 +9,8 @@ export default async function CheckoutPage() {
     prisma.product.findMany(),
     prisma.bundle.findMany(),
     prisma.deliveryConfig.findUnique({ where: { id: 1 } }),
-    prisma.deliverySlot.findMany(),
-    prisma.deliveryZone.findMany(),
+    prisma.deliverySlot.findMany({ orderBy: { orderIndex: "asc" } }),
+    prisma.deliveryZone.findMany({ orderBy: { fee: "asc" } }),
   ]);
 
   return <CheckoutClient products={products} bundles={bundles} deliveryConfig={deliveryConfig} slots={slots} zones={zones} />;
