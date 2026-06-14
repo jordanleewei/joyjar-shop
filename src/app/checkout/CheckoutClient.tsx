@@ -81,11 +81,24 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
     // Here we just trigger the animation and go to the confirm screen.
     const num = "JJ-" + Math.floor(100000 + Math.random() * 899999);
     
+    // Find the readable date and time
+    const selectedDateObj = dateOptions.find((d) => d.key === selectedDate);
+    const dateLabel = selectedDateObj ? selectedDateObj.label : "";
+    const timeLabel = TIME_SLOTS.find((ts) => ts.id === selectedTime)?.label || "";
+    const slotString = isPickup ? "Self Pick-up" : `${dateLabel} ${timeLabel}`;
+
     checkoutSwim(() => {
       setSwimming(false);
       clearCart();
-      // Normally we pass order id, for now just generic confirm
-      router.push("/checkout/confirm");
+      const query = new URLSearchParams({
+        num,
+        slot: slotString,
+        total: (sub + ship).toString(),
+        pay,
+        name: form.name,
+        phone: form.phone
+      }).toString();
+      router.push(`/checkout/confirm?${query}`);
     }, { duration: 2600 });
   };
 
