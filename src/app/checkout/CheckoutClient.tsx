@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Shared";
 import { Btn } from "@/components/ui/components";
@@ -21,17 +21,49 @@ function Field({ label, zh, value, onChange, placeholder, type = "text", wide }:
   );
 }
 
+/* ── helpers for dynamic date generation ── */
+const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_NAMES_ZH = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function buildDateOptions() {
+  const dates: { key: string; label: string; labelZh: string; iso: string }[] = [];
+  const now = new Date();
+  // start from tomorrow (1 day in advance) up to 1 month ahead
+  for (let d = 1; d <= 30; d++) {
+    const dt = new Date(now);
+    dt.setDate(now.getDate() + d);
+    const dayEn = DAY_NAMES_EN[dt.getDay()];
+    const dayZh = DAY_NAMES_ZH[dt.getDay()];
+    const mon = MONTH_NAMES[dt.getMonth()];
+    const date = dt.getDate();
+    const iso = dt.toISOString().slice(0, 10);
+    const label = `${dayEn}, ${mon} ${date}`;
+    dates.push({ key: iso, label, labelZh: `${dayZh} ${dt.getMonth() + 1}/${date}`, iso });
+  }
+  return dates;
+}
+
+const TIME_SLOTS = [
+  { id: "afternoon", label: "Afternoon", zh: "下午", time: "13:00 – 18:00" },
+  { id: "evening",   label: "Evening",   zh: "傍晚", time: "18:00 – 22:00" },
+];
+
 export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones }: any) {
   const router = useRouter();
   const { cart, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   const [form, setForm] = useState({ name: "", phone: "", email: "", addr: "", unit: "", postal: "", note: "" });
-  const [slot, setSlot] = useState(slots[0]?.text || "");
+  const [deliveryMode, setDeliveryMode] = useState<"deliver" | "pickup">("deliver");
+  const dateOptions = useMemo(() => buildDateOptions(), []);
+  const [selectedDate, setSelectedDate] = useState(dateOptions[0]?.key || "");
+  const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[0].id);
   const [zoneId, setZoneId] = useState(zones[0]?.id);
   const [pay, setPay] = useState("card");
   const [card, setCard] = useState({ num: "", exp: "", cvc: "" });
   const [swimming, setSwimming] = useState(false);
+  const [dateOffset, setDateOffset] = useState(0);
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
@@ -39,8 +71,9 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
   const set = (k: string) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const zone = zones.find((z: any) => z.id === zoneId);
   const sub = cartSubtotal(cart, products, bundles);
-  const ship = deliveryFee(cart, zone, deliveryConfig, products, bundles);
-  const ready = form.name && form.phone && form.addr && (pay === "paynow" || (card.num && card.exp && card.cvc));
+  const isPickup = deliveryMode === "pickup";
+  const ship = isPickup ? 0 : deliveryFee(cart, zone, deliveryConfig, products, bundles);
+  const ready = form.name && form.phone && (isPickup || form.addr) && (pay === "paynow" || (card.num && card.exp && card.cvc));
 
   const placeOrder = () => {
     setSwimming(true);
@@ -55,6 +88,11 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
       router.push("/checkout/confirm");
     }, { duration: 2600 });
   };
+
+  /* ── visible date window: show 5 at a time with scroll arrows ── */
+  const VISIBLE_DATES = 5;
+  const maxOffset = Math.max(0, dateOptions.length - VISIBLE_DATES);
+  const visibleDates = dateOptions.slice(dateOffset, dateOffset + VISIBLE_DATES);
 
   const Steps = (
     <div className="ck-steps">
@@ -117,31 +155,115 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
             </section>
 
             <section className="ck-block">
-              <h3 className="ck-h">Delivery · 配送 <span className="ck-tag">Self-delivered 自家配送</span></h3>
-              <div className="field-grid">
-                <Field label="Address" zh="地址" value={form.addr} onChange={set("addr")} placeholder="Street & block" wide />
-                <Field label="Unit" zh="單位" value={form.unit} onChange={set("unit")} placeholder="#12-34" />
-                <Field label="Postal" zh="郵編" value={form.postal} onChange={set("postal")} placeholder="123456" />
+              <h3 className="ck-h">Delivery · 配送</h3>
+
+              {/* ── Delivery mode toggle ── */}
+              <span className="opt-label">Method · 方式</span>
+              <div className="dm-toggle-row">
+                <button
+                  data-nofish="1"
+                  className={`dm-toggle ${deliveryMode === "deliver" ? "is-on" : ""}`}
+                  onClick={() => setDeliveryMode("deliver")}
+                >
+                  <span className="dm-icon">🚚</span>
+                  <span className="dm-text">
+                    <strong>Deliver</strong>
+                    <small>配送到府</small>
+                  </span>
+                </button>
+                <button
+                  data-nofish="1"
+                  className={`dm-toggle ${deliveryMode === "pickup" ? "is-on" : ""}`}
+                  onClick={() => setDeliveryMode("pickup")}
+                >
+                  <span className="dm-icon">🏪</span>
+                  <span className="dm-text">
+                    <strong>Self Pick-up</strong>
+                    <small>自取 · 免運費</small>
+                  </span>
+                </button>
               </div>
-              {zones.length > 0 && (
-                <React.Fragment>
-                  <span className="opt-label">Area · 地區</span>
-                  <div className="slot-row">
-                    {zones.map((z: any) => (
-                      <button key={z.id} data-nofish="1" className={`slot ${zoneId === z.id ? "is-on" : ""}`} onClick={() => setZoneId(z.id)}>
-                        {z.name} · {z.nameZh}{sub < (deliveryConfig?.freeThreshold || 50) ? ` · ${priceStr(z.fee)}` : ""}
-                      </button>
-                    ))}
+
+              {/* ── Address fields (hidden for self pick-up) ── */}
+              {isPickup ? (
+                <div className="pickup-info">
+                  <p className="pickup-addr">📍 JoyJar Studio · 小膠傲工作室</p>
+                  <p className="pickup-detail">Pick up at our studio. We'll confirm the exact address via WhatsApp after order.</p>
+                  <p className="pickup-detail pickup-zh">下單後我們會透過 WhatsApp 確認取貨地址。</p>
+                </div>
+              ) : (
+                <>
+                  <div className="field-grid">
+                    <Field label="Address" zh="地址" value={form.addr} onChange={set("addr")} placeholder="Street & block" wide />
+                    <Field label="Unit" zh="單位" value={form.unit} onChange={set("unit")} placeholder="#12-34" />
+                    <Field label="Postal" zh="郵編" value={form.postal} onChange={set("postal")} placeholder="123456" />
                   </div>
-                </React.Fragment>
+                  {zones.length > 0 && (
+                    <React.Fragment>
+                      <span className="opt-label">Area · 地區</span>
+                      <div className="slot-row">
+                        {zones.map((z: any) => (
+                          <button key={z.id} data-nofish="1" className={`slot ${zoneId === z.id ? "is-on" : ""}`} onClick={() => setZoneId(z.id)}>
+                            {z.name} · {z.nameZh}{sub < (deliveryConfig?.freeThreshold || 50) ? ` · ${priceStr(z.fee)}` : ""}
+                          </button>
+                        ))}
+                      </div>
+                    </React.Fragment>
+                  )}
+                </>
               )}
-              <span className="opt-label">Preferred window · 時段</span>
+
+              {/* ── Preferred date ── */}
+              <span className="opt-label">Preferred date · 日期</span>
+              <div className="date-picker-wrap">
+                <button
+                  className="date-arrow"
+                  data-nofish="1"
+                  disabled={dateOffset === 0}
+                  onClick={() => setDateOffset((o) => Math.max(0, o - 1))}
+                  aria-label="Previous dates"
+                >‹</button>
+                <div className="date-row">
+                  {visibleDates.map((d) => (
+                    <button
+                      key={d.key}
+                      data-nofish="1"
+                      className={`date-chip ${selectedDate === d.key ? "is-on" : ""}`}
+                      onClick={() => setSelectedDate(d.key)}
+                    >
+                      <span className="date-day">{d.label.split(",")[0]}</span>
+                      <span className="date-num">{d.label.split(", ")[1]}</span>
+                      <small>{d.labelZh}</small>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  className="date-arrow"
+                  data-nofish="1"
+                  disabled={dateOffset >= maxOffset}
+                  onClick={() => setDateOffset((o) => Math.min(maxOffset, o + 1))}
+                  aria-label="Next dates"
+                >›</button>
+              </div>
+
+              {/* ── Preferred time slot ── */}
+              <span className="opt-label">Preferred time · 時段</span>
               <div className="slot-row">
-                {slots.map((s: any) => (
-                  <button key={s.id} data-nofish="1" className={`slot ${slot === s.text ? "is-on" : ""}`} onClick={() => setSlot(s.text)}>{s.text}</button>
+                {TIME_SLOTS.map((ts) => (
+                  <button
+                    key={ts.id}
+                    data-nofish="1"
+                    className={`slot time-slot ${selectedTime === ts.id ? "is-on" : ""}`}
+                    onClick={() => setSelectedTime(ts.id)}
+                  >
+                    <span className="ts-label">{ts.label}</span>
+                    <span className="ts-zh">{ts.zh}</span>
+                    <span className="ts-time">{ts.time}</span>
+                  </button>
                 ))}
               </div>
-              <Field label="Note for delivery" zh="備註" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide />
+
+              <Field label={isPickup ? "Note" : "Note for delivery"} zh="備註" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide />
             </section>
 
             <section className="ck-block">
@@ -179,7 +301,10 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               })}
             </div>
             <div className="summary-row"><span>Subtotal 小計</span><span>{priceStr(sub)}</span></div>
-            <div className="summary-row"><span>Delivery 運費</span><span>{ship === 0 ? "Free 免費" : priceStr(ship)}</span></div>
+            <div className="summary-row">
+              <span>{isPickup ? "Self pick-up 自取" : "Delivery 運費"}</span>
+              <span>{isPickup ? "Free 免費" : (ship === 0 ? "Free 免費" : priceStr(ship))}</span>
+            </div>
             <div className="summary-row total"><span>Total 總計</span><span>{priceStr(sub + ship)}</span></div>
             <Btn disabled={!ready} onClick={() => ready && placeOrder()}>
               {pay === "paynow" ? "I've paid · 完成付款" : `Pay ${priceStr(sub + ship)} · 付款`}
