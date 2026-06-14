@@ -7,6 +7,8 @@ import { FishProvider } from "@/components/ui/Fish";
 
 const prisma = new PrismaClient();
 
+export const revalidate = 3600; // Cache for 1 hour
+
 export default async function ShopScreen() {
   const products = await prisma.product.findMany({ where: { available: true } });
   const bundles = await prisma.bundle.findMany();

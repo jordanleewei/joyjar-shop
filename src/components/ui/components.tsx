@@ -15,8 +15,8 @@ export function Seal({ size = 56, style = {} }: { size?: number, style?: React.C
 // Handmade circular logo badge (transparent PNG)
 export function LogoMark({ size = 46, className = "", style = {} }: { size?: number, className?: string, style?: React.CSSProperties }) {
   return (
-    <img src="/assets/logo.png" width={size} height={size} alt="小膠傲 JoyJar"
-         className={`logo-img ${className}`} style={style} draggable="false" />
+    <Image src="/assets/logo.png" width={size} height={size} alt="小膠傲 JoyJar"
+         className={`logo-img ${className}`} style={style} draggable={false} unoptimized={false} priority={true} />
   );
 }
 

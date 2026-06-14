@@ -5,6 +5,17 @@ import { notFound } from "next/navigation";
 
 const prisma = new PrismaClient();
 
+export const revalidate = 3600; // Cache for 1 hour
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({ select: { id: true } });
+  const bundles = await prisma.bundle.findMany({ select: { id: true } });
+  return [
+    ...products.map((p) => ({ id: p.id })),
+    ...bundles.map((b) => ({ id: b.id })),
+  ];
+}
+
 export default async function ProductPage({ params }: { params: { id: string } }) {
   const [products, bundles, delivery] = await Promise.all([
     prisma.product.findMany({ where: { available: true } }),
