@@ -11,6 +11,7 @@ import { lineFor, boxSummary, boxTitle, cartSubtotal, deliveryFee } from "@/lib/
 import { optionSummary } from "@/lib/constants";
 import { checkoutSwim } from "@/components/ui/Fish";
 
+
 function Field({ label, zh, value, onChange, placeholder, type = "text", wide }: any) {
   return (
     <label className={`field ${wide ? "field-wide" : ""}`}>
@@ -60,47 +61,71 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
   const [selectedDate, setSelectedDate] = useState(dateOptions[0]?.key || "");
   const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[0].id);
   const [zoneId, setZoneId] = useState(zones[0]?.id);
-  const [pay, setPay] = useState("card");
-  const [card, setCard] = useState({ num: "", exp: "", cvc: "" });
+  const [pay, setPay] = useState("paynow");
   const [swimming, setSwimming] = useState(false);
   const [dateOffset, setDateOffset] = useState(0);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   useEffect(() => { setMounted(true); }, []);
+  
+  const sub = cartSubtotal(cart, products, bundles);
+  const zone = zones.find((z: any) => z.id === zoneId);
+  const isPickup = deliveryMode === "pickup";
+  const ship = isPickup ? 0 : deliveryFee(cart, zone, deliveryConfig, products, bundles);
+
   if (!mounted) return null;
 
   const set = (k: string) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const zone = zones.find((z: any) => z.id === zoneId);
-  const sub = cartSubtotal(cart, products, bundles);
-  const isPickup = deliveryMode === "pickup";
-  const ship = isPickup ? 0 : deliveryFee(cart, zone, deliveryConfig, products, bundles);
-  const ready = form.name && form.phone && (isPickup || form.addr) && (pay === "paynow" || (card.num && card.exp && card.cvc));
+  const ready = form.name && form.phone && (isPickup || form.addr);
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
+    setIsProcessing(true);
     setSwimming(true);
-    // In a real app, we would make a POST request to a server-side route
-    // Here we just trigger the animation and go to the confirm screen.
     const num = "JJ-" + Math.floor(100000 + Math.random() * 899999);
     
-    // Find the readable date and time
     const selectedDateObj = dateOptions.find((d) => d.key === selectedDate);
     const dateLabel = selectedDateObj ? selectedDateObj.label : "";
     const timeLabel = TIME_SLOTS.find((ts) => ts.id === selectedTime)?.label || "";
     const slotString = isPickup ? "Self Pick-up" : `${dateLabel} ${timeLabel}`;
 
-    checkoutSwim(() => {
+    const query = new URLSearchParams({
+      num,
+      slot: slotString,
+      total: (sub + ship).toString(),
+      pay,
+      name: form.name,
+      phone: form.phone
+    }).toString();
+
+    const redirectUrl = `${window.location.origin}/checkout/confirm?${query}`;
+
+    try {
+      const res = await fetch("/api/create-hitpay-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: sub + ship, redirectUrl })
+      });
+      const data = await res.json();
+      
+      if (data.url) {
+        checkoutSwim(() => {
+          setSwimming(false);
+          clearCart();
+          window.location.href = data.url;
+        }, { duration: 2600 });
+      } else {
+        alert(data.error || "Payment initialization failed");
+        setSwimming(false);
+        setIsProcessing(false);
+      }
+    } catch (err) {
+      alert("Error contacting payment gateway");
       setSwimming(false);
-      clearCart();
-      const query = new URLSearchParams({
-        num,
-        slot: slotString,
-        total: (sub + ship).toString(),
-        pay,
-        name: form.name,
-        phone: form.phone
-      }).toString();
-      router.push(`/checkout/confirm?${query}`);
-    }, { duration: 2600 });
+      setIsProcessing(false);
+    }
   };
+
 
   /* ── visible date window: show 5 at a time with scroll arrows ── */
   const VISIBLE_DATES = 5;
@@ -117,36 +142,11 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
 
   const PaymentCard = (
     <div className="pay-body">
-      {pay === "card" && (
-        <div className="card-fields">
-          <div className="stripe-badge">Secured by <strong>Stripe</strong></div>
-          <Field label="Card number" zh="卡號" value={card.num} placeholder="4242 4242 4242 4242"
-            onChange={(v: string) => setCard((c) => ({ ...c, num: v }))} wide />
-          <div className="field-pair">
-            <Field label="Expiry" zh="到期" value={card.exp} placeholder="MM / YY"
-              onChange={(v: string) => setCard((c) => ({ ...c, exp: v }))} />
-            <Field label="CVC" zh="安全碼" value={card.cvc} placeholder="123"
-              onChange={(v: string) => setCard((c) => ({ ...c, cvc: v }))} />
-          </div>
-        </div>
-      )}
-      {pay === "paynow" && (
-        <div className="paynow-body">
-          <div className="qr" aria-hidden="true">
-            <div className="qr-grid">
-              {Array.from({ length: 49 }).map((_, i) =>
-                <span key={i} style={{ opacity: (i * 7 + (i % 5) * 13) % 3 === 0 ? 1 : 0 }} />
-              )}
-            </div>
-            <div className="qr-mark"><Seal size={34} /></div>
-          </div>
-          <div className="paynow-info">
-            <p className="paynow-zh">PayNow 掃碼付款</p>
-            <p>Scan with any Singapore bank app to pay <strong>{priceStr(sub + ship)}</strong>.</p>
-            <p className="paynow-uen">UEN · 小膠傲 JoyJar Pte Ltd · 20260613A</p>
-          </div>
-        </div>
-      )}
+      <div className="hitpay-info">
+        <div className="stripe-badge" style={{marginBottom: "16px"}}>Secured by <strong>HitPay</strong></div>
+        <p style={{marginBottom: "8px", fontSize: "0.95rem"}}>You will be safely redirected to HitPay to complete your {pay === "paynow" ? "PayNow" : "Credit Card"} payment.</p>
+        <p style={{color: "var(--fg-muted)", fontSize: "0.85rem"}}>UEN · 小膠傲 JoyJar Pte Ltd · 20260613A</p>
+      </div>
     </div>
   );
 
@@ -282,8 +282,8 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
             <section className="ck-block">
               <h3 className="ck-h">Payment · 付款</h3>
               <div className="pay-tabs">
-                <button data-nofish="1" className={`pay-tab ${pay === "card" ? "is-on" : ""}`} onClick={() => setPay("card")}>Card 信用卡</button>
                 <button data-nofish="1" className={`pay-tab ${pay === "paynow" ? "is-on" : ""}`} onClick={() => setPay("paynow")}>PayNow</button>
+                <button data-nofish="1" className={`pay-tab ${pay === "card" ? "is-on" : ""}`} onClick={() => setPay("card")}>Card 信用卡</button>
               </div>
               {PaymentCard}
             </section>
@@ -319,10 +319,10 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               <span>{isPickup ? "Free 免費" : (ship === 0 ? "Free 免費" : priceStr(ship))}</span>
             </div>
             <div className="summary-row total"><span>Total 總計</span><span>{priceStr(sub + ship)}</span></div>
-            <Btn disabled={!ready} onClick={() => ready && placeOrder()}>
-              {pay === "paynow" ? "I've paid · 完成付款" : `Pay ${priceStr(sub + ship)} · 付款`}
+            <Btn disabled={!ready || isProcessing} onClick={() => ready && placeOrder()}>
+              {isProcessing ? "Redirecting..." : `Pay ${priceStr(sub + ship)} · 付款`}
             </Btn>
-            <p className="summary-secure">🔒 Encrypted · Stripe &amp; PayNow</p>
+            <p className="summary-secure">🔒 Secure Checkout by HitPay</p>
           </aside>
         </div>
       </div>
