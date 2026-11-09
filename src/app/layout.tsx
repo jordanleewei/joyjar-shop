@@ -2,9 +2,27 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { FishProvider } from "@/components/ui/Fish";
 
+const SITE_DESC = "一罐花胶，满满胶傲 · Fresh fish maw slow-stewed with real ingredients and milk. Pandan, Noir, Calm and Rose. No preservatives, made fresh in Singapore.";
+
 export const metadata: Metadata = {
-  title: "小胶傲 · JoyJar — Fish Maw Dessert in a Jar",
-  description: "Handmade fish maw collagen desserts.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://joyjar-shop.vercel.app"),
+  title: "小胶傲 JoyJar · Fresh fish maw in a jar",
+  description: SITE_DESC,
+  openGraph: {
+    type: "website",
+    siteName: "小胶傲 JoyJar",
+    title: "小胶傲 JoyJar · 一罐花胶，满满胶傲",
+    description: SITE_DESC,
+    url: "/",
+    locale: "en_SG",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "小胶傲 JoyJar · 一罐花胶，满满胶傲" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "小胶傲 JoyJar · 一罐花胶，满满胶傲",
+    description: SITE_DESC,
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({
