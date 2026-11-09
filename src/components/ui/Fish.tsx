@@ -183,9 +183,11 @@ export function checkoutSwim(onDone?: () => void, opts: any = {}) {
 export function FishProvider() {
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      const trigger = (e.target as HTMLElement).closest("[data-fish]");
-      if (!trigger) return;
-      spawnBurst(e.clientX, e.clientY, "auto", 5);
+      // fish on every click, anywhere — except while typing in a form field
+      const t = e.target as HTMLElement;
+      if (t.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (e.clientX === 0 && e.clientY === 0) return; // keyboard-triggered clicks
+      spawnBurst(e.clientX, e.clientY, "auto", t.closest("[data-fish]") ? 5 : 3);
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);

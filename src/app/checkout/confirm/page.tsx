@@ -1,6 +1,7 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { checkoutSwim } from "@/components/ui/Fish";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "@/components/ui/components";
@@ -34,6 +35,19 @@ function ConfirmContent() {
     load();
     return () => clearTimeout(timer);
   }, [num]);
+
+  // celebrate a confirmed payment: schools of fish swim across the screen
+  const celebrated = useRef(false);
+  useEffect(() => {
+    if (order?.status !== "paid" || celebrated.current) return;
+    celebrated.current = true;
+    const timers = [
+      window.setTimeout(() => checkoutSwim(undefined, { count: 18, duration: 3400 }), 300),
+      window.setTimeout(() => checkoutSwim(undefined, { count: 14, duration: 3800 }), 2200),
+      window.setTimeout(() => checkoutSwim(undefined, { count: 10, duration: 4200 }), 4600),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [order?.status]);
 
   if (err) {
     return (

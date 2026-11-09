@@ -36,10 +36,17 @@ export function unlockedAccessories(tierIndex: number) {
 // ---- card design ----
 export const SKIN = ["#f6d7bd", "#eec39f", "#d9a37c", "#b67a55", "#8a5638"];
 export const HAIR_COLOURS = ["#2c2420", "#5a3a26", "#9a6a3c", "#c9a36a", "#b34a30"];
+export const LOOKS = [{ id: "f", en: "Her", zh: "她" }, { id: "m", en: "Him", zh: "他" }];
 export const HAIR_STYLES = [
-  { id: "bob", en: "Bob" }, { id: "curly", en: "Curly" }, { id: "bun", en: "Bun" },
-  { id: "long", en: "Long" }, { id: "short", en: "Short" },
+  { id: "bob", en: "Bob", look: "f" }, { id: "curly", en: "Curly", look: "f" }, { id: "bun", en: "Bun", look: "f" },
+  { id: "long", en: "Long", look: "f" }, { id: "short", en: "Short", look: "f" },
+  { id: "crew", en: "Crew", look: "m" }, { id: "side", en: "Side part", look: "m" }, { id: "spiky", en: "Spiky", look: "m" },
+  { id: "mcurly", en: "Curly", look: "m" }, { id: "buzz", en: "Buzz", look: "m" },
 ];
+export const FACIAL = [
+  { id: "none", en: "None" }, { id: "stubble", en: "Stubble" }, { id: "moustache", en: "Moustache" }, { id: "beard", en: "Beard" },
+];
+export const DEFAULT_HAIR: Record<string, string> = { f: "curly", m: "crew" };
 export const TOPS = ["#6e9f5a", "#b34a30", "#3a3140", "#d48691", "#bfa063"];
 export const CARD_THEMES = [
   { id: "rose",   en: "Rose",   bg: "#e8b9bf", deep: "#9a3f54", ink: "#3a1d24" },
@@ -59,11 +66,13 @@ export const ACCESSORIES = [
 ];
 
 export type CardDesign = {
+  look: string; facial: string;
   skin: number; hair: string; hairColour: number; top: number;
   theme: string; petName: string; petColour: string; accessory: string;
 };
 
 export const DEFAULT_CARD: CardDesign = {
+  look: "f", facial: "none",
   skin: 1, hair: "curly", hairColour: 0, top: 0,
   theme: "rose", petName: "Bouncy", petColour: "gold", accessory: "bow",
 };
@@ -77,9 +86,12 @@ export function parseCard(raw: any): CardDesign {
 export function cleanCard(input: any): CardDesign {
   const c = parseCard(input);
   const clampIdx = (n: any, len: number) => Math.max(0, Math.min(len - 1, Number(n) | 0));
+  const look = c.look === "m" ? "m" : "f";
   return {
+    look,
+    facial: look === "m" && FACIAL.some((f) => f.id === c.facial) ? c.facial : "none",
     skin: clampIdx(c.skin, SKIN.length),
-    hair: HAIR_STYLES.some((h) => h.id === c.hair) ? c.hair : DEFAULT_CARD.hair,
+    hair: HAIR_STYLES.some((h) => h.id === c.hair && h.look === look) ? c.hair : DEFAULT_HAIR[look],
     hairColour: clampIdx(c.hairColour, HAIR_COLOURS.length),
     top: clampIdx(c.top, TOPS.length),
     theme: CARD_THEMES.some((t) => t.id === c.theme) ? c.theme : DEFAULT_CARD.theme,

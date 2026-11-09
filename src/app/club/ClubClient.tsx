@@ -58,7 +58,7 @@ function JoinForm({ card, name, setName }: { card: CardDesign; name: string; set
 
   return (
     <form className="join-form" onSubmit={submit}>
-      <h3 className="ck-h">{mode === "join" ? "Make my card · 加入会员" : "Welcome back · 会员登录"}</h3>
+      <h3 className="ck-h">{mode === "join" ? "Join the club · 加入会员" : "Welcome back · 会员登录"}</h3>
       {mode === "join" && (
         <label className="field">
           <span className="field-label">Name on card <em>卡面名字</em></span>
@@ -75,9 +75,9 @@ function JoinForm({ card, name, setName }: { card: CardDesign; name: string; set
           autoComplete={mode === "join" ? "new-password" : "current-password"} placeholder={mode === "join" ? "At least 8 characters" : ""} required />
       </label>
       {err && <p className="form-err" role="alert">{err}</p>}
-      <Btn type="submit" disabled={busy}>{busy ? "One moment…" : mode === "join" ? "Make my card · 免费加入" : "Log in · 登录"}</Btn>
+      <Btn type="submit" disabled={busy}>{busy ? "One moment…" : mode === "join" ? "Join the club · 免费加入" : "Log in · 登录"}</Btn>
       <button type="button" className="link-quiet" data-nofish="1" onClick={() => { setErr(""); setMode(mode === "join" ? "login" : "join"); }}>
-        {mode === "join" ? "Already a member? Log in" : "New here? Make a card"}
+        {mode === "join" ? "Already a member? Log in" : "New here? Join the club"}
       </button>
     </form>
   );
@@ -139,6 +139,13 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
 
       <section className="club-make">
         <div className="wrap club-make-inner">
+          <div className="club-preview">
+            <div className="club-preview-sticky">
+              <MemberCard d={card} name={name} num={member?.num} tierIndex={member?.tierIndex || 0} />
+              <p className="club-preview-cap">Live preview · 实时预览</p>
+            </div>
+          </div>
+          <div className="club-make-main">
           <div className="club-make-design">
             <Label zh="设计卡面">{member ? "Edit your card" : "Step 1 · Design your card"}</Label>
             {member && (
@@ -181,6 +188,7 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
                 <JoinForm card={card} name={name} setName={setName} />
               </>
             )}
+          </div>
           </div>
         </div>
       </section>

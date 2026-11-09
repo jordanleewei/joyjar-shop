@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import {
-  SKIN, HAIR_COLOURS, HAIR_STYLES, TOPS, CARD_THEMES, PET_COLOURS, ACCESSORIES, TIERS,
+  SKIN, HAIR_COLOURS, HAIR_STYLES, TOPS, LOOKS, FACIAL, DEFAULT_HAIR, CARD_THEMES, PET_COLOURS, ACCESSORIES, TIERS,
   CardDesign, unlockedAccessories,
 } from "@/lib/club";
 import { FishMawPet } from "./MemberCard";
@@ -39,13 +39,32 @@ export function CardDesigner({ d, onChange, tierIndex = 0 }: { d: CardDesign; on
       {tab === "you" && (
         <div className="cd-panel">
           <div className="cd-row">
+            <span className="cd-label">Look</span>
+            <div className="cd-chips">
+              {LOOKS.map((l) => (
+                <button key={l.id} type="button" data-nofish="1" className={`chip ${d.look === l.id ? "is-on" : ""}`}
+                  onClick={() => d.look !== l.id && set({ look: l.id, hair: DEFAULT_HAIR[l.id], facial: "none" })}>{l.en}<small>{l.zh}</small></button>
+              ))}
+            </div>
+          </div>
+          <div className="cd-row">
             <span className="cd-label">Hair</span>
             <div className="cd-chips">
-              {HAIR_STYLES.map((h) => (
+              {HAIR_STYLES.filter((h) => h.look === d.look).map((h) => (
                 <button key={h.id} type="button" data-nofish="1" className={`chip ${d.hair === h.id ? "is-on" : ""}`} onClick={() => set({ hair: h.id })}>{h.en}</button>
               ))}
             </div>
           </div>
+          {d.look === "m" && (
+            <div className="cd-row">
+              <span className="cd-label">Facial hair</span>
+              <div className="cd-chips">
+                {FACIAL.map((f) => (
+                  <button key={f.id} type="button" data-nofish="1" className={`chip ${d.facial === f.id ? "is-on" : ""}`} onClick={() => set({ facial: f.id })}>{f.en}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <Swatches label="Hair colour" list={HAIR_COLOURS} value={d.hairColour} onChange={(i) => set({ hairColour: i })} />
           <Swatches label="Skin" list={SKIN} value={d.skin} onChange={(i) => set({ skin: i })} />
           <Swatches label="Top" list={TOPS} value={d.top} onChange={(i) => set({ top: i })} />

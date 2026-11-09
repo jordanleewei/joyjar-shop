@@ -61,68 +61,81 @@ export function FlavourShowcase({ products }: { products: any[] }) {
   );
 }
 
-/* ---------------- Into our kitchen (scroll journey) ---------------- */
+/* ---------------- Into our kitchen (autoplay journey) ---------------- */
+const STEP_MS = 4200;
+
 export function Journey() {
   const [active, setActive] = useState(0);
-  const stepRefs = useRef<(HTMLElement | null)[]>([]);
+  const [playing, setPlaying] = useState(true);
+  const [inView, setInView] = useState(false);
+  const [cycle, setCycle] = useState(0); // restarts the progress timer
+  const ref = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const els = stepRefs.current.filter(Boolean) as HTMLElement[];
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.idx));
-      });
-    }, { rootMargin: "-45% 0px -45% 0px" });
-    els.forEach((el) => io.observe(el));
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) setPlaying(false);
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.35 });
+    if (ref.current) io.observe(ref.current);
     return () => io.disconnect();
   }, []);
 
-  const go = (i: number) => stepRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  useEffect(() => {
+    if (!playing || !inView) return;
+    const t = window.setTimeout(() => setActive((a) => (a + 1) % PROCESS.length), STEP_MS);
+    return () => clearTimeout(t);
+  }, [active, playing, inView, cycle]);
+
+  const go = (i: number) => { setActive(i); setCycle((c) => c + 1); };
   const Scene = SCENES[active];
+  const s = PROCESS[active];
+  const running = playing && inView;
 
   return (
-    <section className="journey" id="kitchen">
+    <section className="journey" id="kitchen" ref={ref}>
       <div className="wrap">
-        <div className="journey-head">
-          <div className="section-head">
-            <Label zh="鲜炖之旅">Into our kitchen</Label>
-            <h2 className="section-title">Come watch your jar <em>being made.</em></h2>
-            <p className="section-lede">Seven slow steps, about two days from dried fish maw to your fridge. Scroll along.</p>
-          </div>
-          <a href="#pop" className="skip-tour" data-nofish="1">Skip the tour ↓</a>
+        <div className="section-head">
+          <Label zh="鲜炖之旅">Into our kitchen</Label>
+          <h2 className="section-title">Watch our jar <em>being made.</em></h2>
+          <p className="section-lede">Seven slow steps, about two days from dried fish maw to your fridge.</p>
         </div>
 
         <div className="journey-grid">
           <div className="journey-stage">
             <div className="stage-card">
               <span className="stage-step">{String(active + 1).padStart(2, "0")} / {String(PROCESS.length).padStart(2, "0")}</span>
-              <span className="stage-time">{PROCESS[active].time}</span>
-              <svg viewBox="0 0 400 300" className="stage-svg" key={active} role="img" aria-label={PROCESS[active].en}>
+              <span className="stage-time">{s.time}</span>
+              <svg viewBox="0 0 400 300" className="stage-svg" key={active} role="img" aria-label={s.en}>
                 <Scene />
               </svg>
-              <div className="stage-progress"><span style={{ width: `${((active + 1) / PROCESS.length) * 100}%` }} /></div>
+              <div className="stage-progress">
+                <span key={`${active}-${cycle}`} className={running ? "is-running" : ""} style={{ animationDuration: `${STEP_MS}ms` }} />
+              </div>
             </div>
             <div className="stage-rail" role="tablist" aria-label="Steps">
-              {PROCESS.map((s, i) => (
-                <button key={s.id} role="tab" aria-selected={i === active} aria-label={s.en} data-nofish="1"
+              {PROCESS.map((p, i) => (
+                <button key={p.id} role="tab" aria-selected={i === active} aria-label={p.en} data-nofish="1"
                   className={`rail-dot ${i === active ? "is-on" : ""} ${i < active ? "is-done" : ""}`} onClick={() => go(i)}>
-                  {s.cn}
+                  {p.cn}
                 </button>
               ))}
             </div>
           </div>
 
-          <ol className="journey-steps">
-            {PROCESS.map((s, i) => (
-              <li key={s.id} data-idx={i} ref={(el) => { stepRefs.current[i] = el; }} className={`jstep ${i === active ? "is-on" : ""}`}>
-                <span className="jstep-num">{String(i + 1).padStart(2, "0")}</span>
-                <h3 className="jstep-title">{s.en} <span>{s.zh}</span></h3>
-                <p className="jstep-time">{s.time}</p>
-                <p className="jstep-text">{s.text}</p>
-                <p className="jstep-zh">{s.textZh}</p>
-              </li>
-            ))}
-          </ol>
+          <div className="jpanel" aria-live="polite">
+            <div className="jstep is-on" key={active}>
+              <span className="jstep-num">Step {String(active + 1).padStart(2, "0")}</span>
+              <h3 className="jstep-title">{s.en} <span>{s.zh}</span></h3>
+              <p className="jstep-time">{s.time}</p>
+              <p className="jstep-text">{s.text}</p>
+              <p className="jstep-zh">{s.textZh}</p>
+            </div>
+            <div className="jcontrols">
+              <button type="button" className="jbtn" data-nofish="1" onClick={() => go((active - 1 + PROCESS.length) % PROCESS.length)} aria-label="Previous step">‹</button>
+              <button type="button" className="jbtn jbtn-play" data-nofish="1" onClick={() => { setPlaying((p) => !p); setCycle((c) => c + 1); }}>
+                {playing ? "❚❚ Pause" : "▶ Play"}
+              </button>
+              <button type="button" className="jbtn" data-nofish="1" onClick={() => go((active + 1) % PROCESS.length)} aria-label="Next step">›</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -291,7 +304,7 @@ export function ClubTeaser() {
             <span>Accessories unlock as you level up</span>
           </div>
           <Link href="/club" passHref legacyBehavior>
-            <Btn as="a">Make my card · 加入会员</Btn>
+            <Btn as="a">Join the club · 加入会员</Btn>
           </Link>
         </div>
       </div>
@@ -306,7 +319,6 @@ export function Faq() {
       <div className="wrap faq-inner">
         <div className="section-head">
           <Label zh="问答">FAQ</Label>
-          <h2 className="section-title">Asked a lot.</h2>
           <p className="section-lede">Something else on your mind? Message us on WhatsApp after you order and we&apos;ll get back to you.</p>
         </div>
         <div className="faq-list">

@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { Header, Footer } from "@/components/layout/Shared";
 import { Hero, BundleCard, Benefits, GiftBlock } from "@/components/ui/ShopBlocks";
 import { Wave, Label } from "@/components/ui/components";
-import { FishProvider } from "@/components/ui/Fish";
 import { Marquee, FlavourShowcase, Journey, PopSection, ClubTeaser, Faq } from "@/components/story/Story";
 
 export const revalidate = 3600; // Cache for 1 hour
@@ -13,10 +12,8 @@ export default async function ShopScreen() {
   const bundles = await prisma.bundle.findMany();
   const deliveryConfig = await prisma.deliveryConfig.findUnique({ where: { id: 1 } });
 
-  // Add the FishProvider to enable global clicks for fish bursts
   return (
     <div className="screen shop-screen">
-      <FishProvider />
       <Header />
       <Hero heroLayout="split" bundles={bundles} deliveryConfig={deliveryConfig} />
       <Marquee />

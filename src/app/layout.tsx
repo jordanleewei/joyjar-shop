@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { FishProvider } from "@/components/ui/Fish";
 
 export const metadata: Metadata = {
   title: "小胶傲 · JoyJar — Fish Maw Dessert in a Jar",
@@ -27,7 +28,10 @@ export default function RootLayout({
         />
         <link rel="icon" type="image/png" href="/assets/logo.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <FishProvider />
+        {children}
+      </body>
     </html>
   );
 }
