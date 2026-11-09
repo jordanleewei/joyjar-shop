@@ -1,56 +1,87 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { LogoMark } from "@/components/ui/components";
 import { Label, Btn } from "@/components/ui/components";
 import { priceStr } from "@/components/ui/ShopBlocks";
 
-// Typically order would be fetched from server based on URL ID
-// For now, static presentation reading from URL query parameters
+type OrderView = {
+  num: string; status: string; slot: string; total: number; discount: number;
+  method: string; pickup: boolean; firstName: string; member: boolean;
+};
+
 function ConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  const order = {
-    num: searchParams.get("num") || "JJ-" + Math.floor(100000 + Math.random() * 899999),
-    slot: searchParams.get("slot") || "Saturday 1pm - 5pm",
-    total: searchParams.get("total") ? parseFloat(searchParams.get("total") as string) : 80,
-    pay: searchParams.get("pay") || "card",
-    form: { 
-      name: searchParams.get("name") || "Valued Guest", 
-      phone: searchParams.get("phone") || "+65 8000 0000" 
-    }
-  };
-  
-  const num = order.num;
+  const num = searchParams.get("num") || "";
+  const [order, setOrder] = useState<OrderView | null>(null);
+  const [err, setErr] = useState("");
 
+  useEffect(() => {
+    if (!num) { setErr("We couldn't find that order."); return; }
+    let tries = 0;
+    let timer: any;
+    const load = async () => {
+      const res = await fetch(`/api/orders/${encodeURIComponent(num)}`, { cache: "no-store" });
+      if (!res.ok) { setErr("We couldn't find that order."); return; }
+      const data: OrderView = await res.json();
+      setOrder(data);
+      // payment can take a few seconds to confirm — check again briefly
+      if (data.status !== "paid" && tries++ < 5) timer = setTimeout(load, 2500);
+    };
+    load();
+    return () => clearTimeout(timer);
+  }, [num]);
+
+  if (err) {
+    return (
+      <div className="wrap confirm-wrap">
+        <div className="confirm-card">
+          <LogoMark size={104} style={{ margin: "0 auto 18px", display: "block" }} />
+          <h1 className="confirm-title">{err}</h1>
+          <p className="confirm-note">If you were charged, message us on WhatsApp and we&apos;ll sort it out right away.</p>
+          <Btn onClick={() => router.push("/")}>Back to shop · 回到首页</Btn>
+        </div>
+      </div>
+    );
+  }
+  if (!order) return <div className="wrap confirm-wrap"><div className="confirm-card"><p className="confirm-note">Checking your payment…</p></div></div>;
+
+  const paid = order.status === "paid";
   return (
     <div className="wrap confirm-wrap">
       <div className="confirm-card">
         <LogoMark size={104} style={{ margin: "0 auto 18px", display: "block" }} />
-        <Label zh="訂單已確認" className="center-eyebrow">Order Confirmed</Label>
-        <h1 className="confirm-title">Thank you — your jars are on their way.</h1>
-        <p className="confirm-zh">心意已收到，花膠甜品即將為您送上。</p>
-        
+        <Label zh={paid ? "订单已确认" : "等待付款确认"} className="center-eyebrow">{paid ? "Order Confirmed" : "Payment pending"}</Label>
+        <h1 className="confirm-title">{paid ? "Thank you — your jars are on their way." : "We're waiting for your payment to clear."}</h1>
+        <p className="confirm-zh">{paid ? "心意已收到，花胶甜品即将为您送上。" : "付款确认后，我们会马上为您准备。"}</p>
+
         <div className="confirm-meta">
-          <div><span>Order 訂單</span><strong>{num}</strong></div>
-          <div><span>Delivery 配送</span><strong>{(order.slot || "").split("  ")[0] || "TBC"}</strong></div>
-          <div><span>Paid 已付</span><strong>{priceStr(order.total)} · {order.pay === "paynow" ? "PayNow" : "Card"}</strong></div>
+          <div><span>Order 订单</span><strong>{order.num}</strong></div>
+          <div><span>{order.pickup ? "Pick-up 自取" : "Delivery 配送"}</span><strong>{(order.slot || "").replace("Self Pick-up · ", "") || "TBC"}</strong></div>
+          <div><span>{paid ? "Paid 已付" : "Amount 金额"}</span><strong>{priceStr(order.total)} · {order.method === "paynow" ? "PayNow" : "Card"}</strong></div>
         </div>
-        
-        {order.slot === "Self Pick-up" ? (
+
+        {order.pickup ? (
           <p className="confirm-note">
-            We will contact you via WhatsApp at {order.form.phone || "your number"} to confirm the exact pick-up address.
-            Thank you, {order.form.name ? order.form.name.split(" ")[0] : "valued guest"}!
+            We&apos;ll WhatsApp you to confirm the exact pick-up address. Thank you{order.firstName ? `, ${order.firstName}` : ""}!
           </p>
         ) : (
           <p className="confirm-note">
-            We self-deliver every jar by hand. {order.form.name ? order.form.name.split(" ")[0] + ", we" : "We"}'ll
-            text {order.form.phone || "you"} before we arrive.
+            We self-deliver every jar by hand. {order.firstName ? `${order.firstName}, we` : "We"}&apos;ll text you before we arrive.
           </p>
         )}
-        <Btn onClick={() => router.push("/")}>Back to shop · 回到首頁</Btn>
+        {paid && !order.member && (
+          <p className="confirm-note">
+            <Link href="/club" className="link-quiet">Join the JoyJar Club</Link> so your next orders count towards up to 15% off.
+          </p>
+        )}
+        {!paid && (
+          <p className="confirm-note">Still pending after a few minutes? Message us with your order number.</p>
+        )}
+        <Btn onClick={() => router.push("/")}>Back to shop · 回到首页</Btn>
       </div>
     </div>
   );

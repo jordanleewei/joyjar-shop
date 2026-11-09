@@ -19,6 +19,7 @@ interface CartState {
   removeItem: (index: number) => void;
   clearCart: () => void;
   getCartCount: () => number;
+  prune: (productIds: string[], bundleIds: string[]) => void;
 }
 
 const keyOf = (it: CartItem) => it.box
@@ -54,7 +55,19 @@ export const useCartStore = create<CartState>()(
         }));
       },
       clearCart: () => set({ cart: [] }),
-      getCartCount: () => get().cart.reduce((sum, item) => sum + item.qty, 0)
+      getCartCount: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
+      // Drop items for flavours/bundles that no longer exist and reset retired options.
+      prune: (productIds, bundleIds) => {
+        const pids = new Set(productIds), bids = new Set(bundleIds);
+        const okSweet = (v: any) => (v === "less" || v === "none" ? v : "less");
+        const next = get().cart
+          .filter((it) => it.bundleId && bids.has(it.bundleId))
+          .filter((it) => it.box
+            ? (it.contents || []).length > 0 && (it.contents || []).every((c: any) => pids.has(c.productId))
+            : !!it.productId && pids.has(it.productId))
+          .map((it) => ({ ...it, mode: it.box ? "mix" : it.mode, options: { sweet: okSweet(it.options?.sweet) } }));
+        if (JSON.stringify(next) !== JSON.stringify(get().cart)) set({ cart: next });
+      }
     }),
     {
       name: 'joyjar-cart',

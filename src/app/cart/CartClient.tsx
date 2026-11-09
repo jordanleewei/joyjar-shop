@@ -30,7 +30,7 @@ function CartImage({ it, p, products }: any) {
     <div className="cart-line-jar cart-image">
       {it.box
         ? <BoxThumb contents={it.contents} products={products} />
-        : <Jar tone={p ? p.tone : "matcha"} size={0.5} label="小膠傲" labelEn={p ? p.cap : "JOYJAR"} />}
+        : <Jar tone={p ? p.tone : "matcha"} size={0.5} label="小胶傲" labelEn={p ? p.cap : "JOYJAR"} />}
     </div>
   );
 }
@@ -62,10 +62,11 @@ function CartLineDesc({ b, p, options }: any) {
 
 export function CartClient({ products, bundles, deliveryConfig }: any) {
   const router = useRouter();
-  const { cart, updateQty, removeItem } = useCartStore();
+  const { cart, updateQty, removeItem, prune } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    prune(products.map((p: any) => p.id), bundles.map((b: any) => b.id));
     setMounted(true);
   }, []);
 
@@ -81,16 +82,16 @@ export function CartClient({ products, bundles, deliveryConfig }: any) {
         <div className="section-head" style={{ padding: "0px", margin: "0px 0px 40px 8px" }}>
           <div style={{ display: "flex", textAlign: "right", height: "20px", flexDirection: "row", alignItems: "baseline", gap: "7px" }}>
             <button className="back-link" data-nofish="1" onClick={() => router.back()} style={{ padding: "0", margin: "0", lineHeight: 1 }}>←</button>
-            <Label zh="購物籃">Your Cart</Label>
+            <Label zh="购物篮">Your Cart</Label>
           </div>
           <h1 className="section-title" style={{ padding: "4px 0px 0px" }}>Ready when you are</h1>
         </div>
         
         {cart.length === 0 ? (
           <div className="empty">
-            <p className="empty-zh">購物籃是空的</p>
+            <p className="empty-zh">购物篮是空的</p>
             <p className="empty-en">Your cart is empty.</p>
-            <Btn onClick={() => router.push("/")}>Shop the jars · 選購</Btn>
+            <Btn onClick={() => router.push("/product/jar-6")}>Shop the jars · 选购</Btn>
           </div>
         ) : (
           <div className="cart-grid">
@@ -135,11 +136,11 @@ export function CartClient({ products, bundles, deliveryConfig }: any) {
             
             <aside className="summary">
               <h3 className="summary-title">Order summary · 摘要</h3>
-              <div className="summary-row"><span>Subtotal 小計</span><span>{priceStr(sub)}</span></div>
-              <div className="summary-row"><span>Delivery 運費</span><span>{ship === 0 ? "Free 免費" : priceStr(ship)}</span></div>
-              {ship > 0 && <p className="summary-hint">Spend {priceStr((deliveryConfig?.freeThreshold || 50) - sub)} more for free delivery · 再加可享免運</p>}
-              <div className="summary-row total"><span>Total 總計</span><span>{priceStr(sub + ship)}</span></div>
-              <Btn onClick={() => router.push("/checkout")}>Checkout · 結帳</Btn>
+              <div className="summary-row"><span>Subtotal 小计</span><span>{priceStr(sub)}</span></div>
+              <div className="summary-row"><span>Delivery 运费</span><span>{ship === 0 ? "Free 免费" : priceStr(ship)}</span></div>
+              {ship > 0 && <p className="summary-hint">Spend {priceStr((deliveryConfig?.freeThreshold || 50) - sub)} more for free delivery · 再加可享免运</p>}
+              <div className="summary-row total"><span>Total 总计</span><span>{priceStr(sub + ship)}</span></div>
+              <Btn onClick={() => router.push("/checkout")}>Checkout · 结账</Btn>
               <button className="link-quiet" data-nofish="1" onClick={() => router.push("/")}>← Continue shopping</button>
             </aside>
           </div>

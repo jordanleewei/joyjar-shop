@@ -1,12 +1,11 @@
 import React from "react";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { CartClient } from "./CartClient";
 
-const prisma = new PrismaClient();
 
 export default async function CartPage() {
   const [products, bundles, deliveryConfig] = await Promise.all([
-    prisma.product.findMany(),
+    prisma.product.findMany({ where: { available: true }, orderBy: { sortOrder: "asc" } }),
     prisma.bundle.findMany(),
     prisma.deliveryConfig.findUnique({ where: { id: 1 } }),
   ]);

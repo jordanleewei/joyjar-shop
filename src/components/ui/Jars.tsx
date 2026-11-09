@@ -12,7 +12,7 @@ function jarColors(tone: string) {
 }
 
 // label text on the band
-function BandText({ cx, cy, label, labelEn, ink, big = 21, font = "'Noto Serif TC', serif", enColor }: any) {
+function BandText({ cx, cy, label, labelEn, ink, big = 21, font = "'Noto Serif SC', serif", enColor }: any) {
   return (
     <React.Fragment>
       <text x={cx} y={cy} textAnchor="middle" fontFamily={font} fontSize={big} fill={ink} letterSpacing="2">{label}</text>
@@ -221,7 +221,7 @@ function renderJar(st: string, tone: string, label: string, labelEn: string) {
   );
 }
 
-export function Jar({ tone = "matcha", size = 1, label = "小膠傲", labelEn = "JoyJar", floating = false, style }: any) {
+export function Jar({ tone = "matcha", size = 1, label = "小胶傲", labelEn = "JoyJar", floating = false, style }: any) {
   const st = JAR_STYLES.includes(style) ? style : "classic";
   const w = 168 * size, h = 240 * size;
   return (

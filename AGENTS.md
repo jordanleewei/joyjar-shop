@@ -41,6 +41,7 @@ npx vercel env pull
 
 ## Pushing Code to GitHub
 
+Always push after any code changes, even small ones.
 Whenever you complete a feature or make changes that you want to back up or deploy, you should push your code to the remote repository. Vercel automatically deploys any code pushed to the `main` branch.
 
 Run the following commands in sequence to stage, commit, and push your changes:

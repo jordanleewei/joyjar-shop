@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 export const revalidate = 3600; // Cache for 1 hour
 
 export async function generateStaticParams() {
-  const products = await prisma.product.findMany({ select: { id: true } });
+  const products = await prisma.product.findMany({ where: { available: true }, select: { id: true } });
   const bundles = await prisma.bundle.findMany({ select: { id: true } });
   return [
     ...products.map((p) => ({ id: p.id })),
@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
   const [products, bundles, delivery] = await Promise.all([
-    prisma.product.findMany({ where: { available: true } }),
+    prisma.product.findMany({ where: { available: true }, orderBy: { sortOrder: "asc" } }),
     prisma.bundle.findMany(),
     prisma.deliveryConfig.findUnique({ where: { id: 1 } }),
   ]);

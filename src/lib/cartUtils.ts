@@ -19,8 +19,8 @@ export function boxSummary(contents: any[], products: any[]) {
 }
 
 export function boxTitle(item: any, lang: string) {
-  if (lang === "zh") return item.mode === "all" ? "六味禮盒 · 全六味" : "六味禮盒 · 自選";
-  return item.mode === "all" ? "Wellness Box · All Flavours" : "Wellness Box · Mix & Match";
+  if (lang === "zh") return "六瓶礼盒 · 自选";
+  return "Box of Six · Mix & Match";
 }
 
 export function cartSubtotal(cart: any[], products: any[], bundles: any[]) {

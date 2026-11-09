@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Label, Btn, Wave } from "./components";
 import { Jar } from "./Jars";
 import { WellnessGiftBox } from "./GiftBox3D";
-import { BENEFITS } from "@/lib/constants";
+import { BENEFITS, DISCLAIMER, DISCLAIMER_ZH } from "@/lib/constants";
 
 export function priceStr(n: number) {
   return "$" + (Number.isInteger(n) ? n : Number(n).toFixed(2));
@@ -18,33 +18,35 @@ export function Hero({ heroLayout = "split", bundles, deliveryConfig }: any) {
     <section className={`hero hero-${heroLayout}`}>
       <div className="wrap hero-inner">
         <div className="hero-copy">
-          <Label zh="花膠 · 甜品">Fish Maw Dessert, in a Jar</Label>
+          <Label zh="鲜炖花胶 · 新加坡制作">Fresh fish maw, in a jar</Label>
           <h1 className="hero-title">
-            Collagen of the<br /><em>Eight Treasures</em>,<br />gently stewed.
+            Slow-stewed joy,<br /><em>sealed in a jar.</em>
           </h1>
-          <p className="hero-zh">小膠傲 · 六款花膠甜品 · 瓶中心意</p>
+          <p className="hero-zh">一罐花胶，满满胶傲</p>
           <p className="hero-lede">
-            Six recipes — matcha, black sesame, red date, ginseng, coconut and osmanthus —
-            slow-stewed with collagen-rich fish maw. A beauty ritual sealed in a jar.
+            Golden fish maw, double-boiled for a full hour with real ingredients and fresh milk.
+            Four flavours, no preservatives, made fresh in Singapore.
           </p>
           <div className="hero-cta">
             <Btn onClick={() => {
-              document.getElementById("bundles")?.scrollIntoView({ behavior: "smooth" });
-            }}>Shop the Jars · 選購</Btn>
+              document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
+            }}>Shop the jars · 选购</Btn>
             <Btn variant="ghost" onClick={() => {
-              document.getElementById("gift")?.scrollIntoView({ behavior: "smooth" });
-            }}>Gifting · 送禮</Btn>
+              document.getElementById("kitchen")?.scrollIntoView({ behavior: "smooth" });
+            }}>See how it&apos;s made · 制作过程</Btn>
           </div>
           <div className="hero-meta">
             <span><strong>{priceStr(six.price)}</strong> / box of 6</span>
             <span className="dot">·</span>
             <span>{priceStr(one.price)} / single jar</span>
+            <span className="dot">·</span>
+            <span>Free delivery over {priceStr(deliveryConfig?.freeThreshold || 50)}</span>
           </div>
         </div>
         <div className="hero-art">
           <div className="hero-halo" />
-          <Jar tone="matcha" size={1.15} floating label="小膠傲" labelEn="MATCHA" />
-          <Jar tone="sesame" size={0.82} floating label="小膠傲" labelEn="SESAME" />
+          <Jar tone="pandan" size={1.15} floating label="小胶傲" labelEn="PANDAN" />
+          <Jar tone="rose" size={0.82} floating label="小胶傲" labelEn="ROSE" />
         </div>
       </div>
     </section>
@@ -66,10 +68,10 @@ export function BundleCard({ b, deliveryConfig }: any) {
       </div>
       <p className="bundle-note">{b.note}</p>
       <p className="bundle-ship">{free ?
-        "Free delivery 免運費" :
+        "Free delivery 免运费" :
         `+ ${priceStr(deliveryConfig?.baseFee || 6)} delivery · free over ${priceStr(deliveryConfig?.freeThreshold || 50)}`}</p>
       <Link href={`/product/${b.id}`} passHref legacyBehavior>
-        <Btn variant={b.featured ? "primary" : "ghost"} as="a">Choose · 選擇</Btn>
+        <Btn variant={b.featured ? "primary" : "ghost"} as="a">Choose · 选择</Btn>
       </Link>
     </div>
   );
@@ -78,7 +80,7 @@ export function BundleCard({ b, deliveryConfig }: any) {
 export function FlavorCard({ p }: any) {
   return (
     <Link href={`/product/${p.id}`} className="flavor-card" data-nofish="1">
-      <div className="flavor-jar"><Jar tone={p.tone} size={0.72} label="小膠傲" labelEn={p.cap} /></div>
+      <div className="flavor-jar"><Jar tone={p.tone} size={0.72} label="小胶傲" labelEn={p.cap} /></div>
       <div className="flavor-body">
         <h3 className="flavor-name">{p.flavorEn}</h3>
         <p className="flavor-zh">{p.flavorZh}</p>
@@ -95,10 +97,10 @@ export function Benefits() {
       <div className="wrap">
         <div className="section-head">
           <Label zh="海八珍">The Eight Treasures of the Sea</Label>
-          <h2 className="section-title">Why fish maw, four ways</h2>
+          <h2 className="section-title">Why we love fish maw</h2>
           <p className="section-lede">
-            Fish maw — dried fish bladder — is prized among the sea's eight treasures for its
-            high-grade collagen, vitamins, and trace calcium and zinc.
+            Fish maw has been a treasured ingredient in Chinese kitchens for generations.
+            We keep it simple: good maw, real ingredients, slow heat and nothing artificial.
           </p>
         </div>
         <div className="benefit-grid">
@@ -111,6 +113,7 @@ export function Benefits() {
             </div>
           )}
         </div>
+        <p className="benefit-disclaimer">{DISCLAIMER}<br /><span>{DISCLAIMER_ZH}</span></p>
       </div>
     </section>
   );
@@ -125,14 +128,14 @@ export function GiftBlock({ bundles }: any) {
           <WellnessGiftBox />
         </div>
         <div className="gift-copy">
-          <Label zh="送禮 · 心意">A Gift of Wellness</Label>
+          <Label zh="送礼 · 心意">A Gift of Wellness</Label>
           <h2 className="section-title">Sealed with intention, ready to give.</h2>
           <p className="section-lede">
-            A box of six arrives gift-ready with free delivery — a considered gesture for the
-            women in your life who treasure beauty and care, and for partners gifting on their behalf.
+            A box of six arrives gift-ready with free delivery — mix and match the four flavours
+            for someone who deserves a little joy (yourself included).
           </p>
           <Link href={`/product/${boxBundle.id}`} passHref legacyBehavior>
-            <Btn as="a">Send a box · 送出禮盒</Btn>
+            <Btn as="a">Send a box · 送出礼盒</Btn>
           </Link>
         </div>
       </div>

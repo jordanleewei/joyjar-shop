@@ -13,7 +13,7 @@ export function CircleSeal({ size = 44 }: { size?: number }) {
       <svg viewBox="0 0 48 48" width="100%" height="100%">
         <circle cx="24" cy="24" r="23" fill="none" stroke={GOLD_B} strokeWidth="1.5" />
         <circle cx="24" cy="24" r="20" fill={CINNABAR} />
-        <text x="24" y="32" textAnchor="middle" fontFamily="'Noto Serif TC', serif" fontWeight="600" fontSize="24" fill={PAPER_B}>膠</text>
+        <text x="24" y="32" textAnchor="middle" fontFamily="'Noto Serif SC', serif" fontWeight="600" fontSize="24" fill={PAPER_B}>胶</text>
       </svg>
     </span>
   );
@@ -83,7 +83,7 @@ export function Logo({ onClick, compact = false }: { onClick?: () => void, compa
     <button className={`logo logo-${style}`} onClick={onClick} data-nofish="1" aria-label="JoyJar home">
       {renderMark(style, size)}
       <span className="logo-text">
-        <span className="logo-zh">小膠傲</span>
+        <span className="logo-zh">小胶傲</span>
         <span className="logo-en">JoyJar</span>
       </span>
     </button>

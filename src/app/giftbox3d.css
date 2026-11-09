@@ -1,4 +1,4 @@
-/* JoyJar — 養生六味禮盒 · 3D auspicious gift box.
+/* JoyJar — 养生六味礼盒 · 3D auspicious gift box.
 
 Built entirely from CSS 3D transforms, but everything faces the camera flat
 
@@ -38,7 +38,7 @@ so the motion reads like a clean 2D animation. Holds 6 classic jars, 3×2. */
 
 --velvet:#2c2820;
 
---font-zh:"Noto Serif TC",serif;
+--font-zh:"Noto Serif SC",serif;
 
 --font-display:"Cormorant Garamond",serif;
 

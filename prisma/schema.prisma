@@ -21,6 +21,12 @@ model Product {
   tone      String
   cap       String
   available Boolean @default(true)
+  tagline       String @default("")
+  taglineZh     String @default("")
+  ingredients   String @default("")
+  ingredientsZh String @default("")
+  allergens     String @default("")
+  sortOrder     Int    @default(0)
 }
 
 model Bundle {
@@ -66,5 +72,20 @@ model Order {
   status          String   @default("pending") // pending, paid
   method          String   // card, paynow
   items           String   // JSON string
+  discount        Float    @default(0)
+  hitpayId        String?
+  memberId        String?
+  member          Member?  @relation(fields: [memberId], references: [id])
   createdAt       DateTime @default(now())
+}
+
+model Member {
+  id           String   @id @default(cuid())
+  num          Int      @unique @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String
+  card         String   @default("{}") // JSON: avatar, pet, theme
+  orders       Order[]
+  createdAt    DateTime @default(now())
 }

@@ -10,6 +10,8 @@ import { priceStr } from "@/components/ui/ShopBlocks";
 import { lineFor, boxSummary, boxTitle, cartSubtotal, deliveryFee } from "@/lib/cartUtils";
 import { optionSummary } from "@/lib/constants";
 import { checkoutSwim } from "@/components/ui/Fish";
+import Link from "next/link";
+import { TIERS } from "@/lib/club";
 
 
 function Field({ label, zh, value, onChange, placeholder, type = "text", wide }: any) {
@@ -24,7 +26,7 @@ function Field({ label, zh, value, onChange, placeholder, type = "text", wide }:
 
 /* ── helpers for dynamic date generation ── */
 const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DAY_NAMES_ZH = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+const DAY_NAMES_ZH = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function buildDateOptions() {
@@ -50,12 +52,12 @@ const TIME_SLOTS = [
   { id: "evening",   label: "Evening",   zh: "傍晚", time: "18:00 – 22:00" },
 ];
 
-export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones }: any) {
+export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones, member }: any) {
   const router = useRouter();
-  const { cart, clearCart } = useCartStore();
+  const { cart, clearCart, prune } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
-  const [form, setForm] = useState({ name: "", phone: "", email: "", addr: "", unit: "", postal: "", note: "" });
+  const [form, setForm] = useState({ name: member?.name || "", phone: "", email: member?.email || "", addr: "", unit: "", postal: "", note: "" });
   const [deliveryMode, setDeliveryMode] = useState<"deliver" | "pickup">("deliver");
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const [selectedDate, setSelectedDate] = useState(dateOptions[0]?.key || "");
@@ -66,13 +68,21 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
   const [dateOffset, setDateOffset] = useState(0);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    prune(products.map((p: any) => p.id), bundles.map((b: any) => b.id));
+    setMounted(true);
+  }, []);
   
   const sub = cartSubtotal(cart, products, bundles);
   const zone = zones.find((z: any) => z.id === zoneId);
   const isPickup = deliveryMode === "pickup";
   const ship = isPickup ? 0 : deliveryFee(cart, zone, deliveryConfig, products, bundles);
+  const rate = member?.discount || 0;
+  const disc = Math.round(sub * rate * 100) / 100;
+  const total = Math.round((sub - disc + ship) * 100) / 100;
+  const tier = member ? TIERS[member.tierIndex] : null;
 
   if (!mounted) return null;
 
@@ -81,47 +91,34 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
 
   const placeOrder = async () => {
     setIsProcessing(true);
-    setSwimming(true);
-    const num = "JJ-" + Math.floor(100000 + Math.random() * 899999);
-    
+    setError("");
+
     const selectedDateObj = dateOptions.find((d) => d.key === selectedDate);
     const dateLabel = selectedDateObj ? selectedDateObj.label : "";
     const timeLabel = TIME_SLOTS.find((ts) => ts.id === selectedTime)?.label || "";
-    const slotString = isPickup ? "Self Pick-up" : `${dateLabel} ${timeLabel}`;
-
-    const query = new URLSearchParams({
-      num,
-      slot: slotString,
-      total: (sub + ship).toString(),
-      pay,
-      name: form.name,
-      phone: form.phone
-    }).toString();
-
-    const redirectUrl = `${window.location.origin}/checkout/confirm?${query}`;
+    const slotString = isPickup ? `Self Pick-up · ${dateLabel} ${timeLabel}` : `${dateLabel} ${timeLabel}`;
 
     try {
       const res = await fetch("/api/create-hitpay-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: sub + ship, redirectUrl })
+        body: JSON.stringify({ cart, form, pickup: isPickup, zoneId, slot: slotString, pay })
       });
       const data = await res.json();
-      
+
       if (data.url) {
+        setSwimming(true);
         checkoutSwim(() => {
           setSwimming(false);
           clearCart();
           window.location.href = data.url;
         }, { duration: 2600 });
       } else {
-        alert(data.error || "Payment initialization failed");
-        setSwimming(false);
+        setError(data.error || "Payment initialization failed");
         setIsProcessing(false);
       }
     } catch (err) {
-      alert("Error contacting payment gateway");
-      setSwimming(false);
+      setError("Error contacting payment gateway. Please try again.");
       setIsProcessing(false);
     }
   };
@@ -145,7 +142,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
       <div className="hitpay-info">
         <div className="stripe-badge" style={{marginBottom: "16px"}}>Secured by <strong>HitPay</strong></div>
         <p style={{marginBottom: "8px", fontSize: "0.95rem"}}>You will be safely redirected to HitPay to complete your {pay === "paynow" ? "PayNow" : "Credit Card"} payment.</p>
-        <p style={{color: "var(--fg-muted)", fontSize: "0.85rem"}}>UEN · 小膠傲 JoyJar Pte Ltd · 20260613A</p>
+        <p style={{color: "var(--fg-muted)", fontSize: "0.85rem"}}>UEN · 小胶傲 JoyJar Pte Ltd · 20260613A</p>
       </div>
     </div>
   );
@@ -159,11 +156,11 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
         <div className="ck-grid ck-two-col">
           <div className="ck-forms">
             <section className="ck-block">
-              <h3 className="ck-h">Contact · 聯絡</h3>
+              <h3 className="ck-h">Contact · 联系</h3>
               <div className="field-grid">
                 <Field label="Full name" zh="姓名" value={form.name} onChange={set("name")} placeholder="Jane Tan" />
-                <Field label="Phone" zh="電話" value={form.phone} onChange={set("phone")} placeholder="+65 ····" />
-                <Field label="Email" zh="電郵" value={form.email} onChange={set("email")} placeholder="jane@email.com" type="email" wide />
+                <Field label="Phone" zh="电话" value={form.phone} onChange={set("phone")} placeholder="+65 ····" />
+                <Field label="Email" zh="邮箱" value={form.email} onChange={set("email")} placeholder="jane@email.com" type="email" wide />
               </div>
             </section>
 
@@ -192,7 +189,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
                   <span className="dm-icon">🏪</span>
                   <span className="dm-text">
                     <strong>Self Pick-up</strong>
-                    <small>自取 · 免運費</small>
+                    <small>自取 · 免运费</small>
                   </span>
                 </button>
               </div>
@@ -200,20 +197,20 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               {/* ── Address fields (hidden for self pick-up) ── */}
               {isPickup ? (
                 <div className="pickup-info">
-                  <p className="pickup-addr">📍 JoyJar Studio · 小膠傲工作室</p>
+                  <p className="pickup-addr">📍 JoyJar Studio · 小胶傲工作室</p>
                   <p className="pickup-detail">Pick up at our studio. We'll confirm the exact address via WhatsApp after order.</p>
-                  <p className="pickup-detail pickup-zh">下單後我們會透過 WhatsApp 確認取貨地址。</p>
+                  <p className="pickup-detail pickup-zh">下单后我们会通过 WhatsApp 确认取货地址。</p>
                 </div>
               ) : (
                 <>
                   <div className="field-grid">
                     <Field label="Address" zh="地址" value={form.addr} onChange={set("addr")} placeholder="Street & block" wide />
-                    <Field label="Unit" zh="單位" value={form.unit} onChange={set("unit")} placeholder="#12-34" />
-                    <Field label="Postal" zh="郵編" value={form.postal} onChange={set("postal")} placeholder="123456" />
+                    <Field label="Unit" zh="单位" value={form.unit} onChange={set("unit")} placeholder="#12-34" />
+                    <Field label="Postal" zh="邮编" value={form.postal} onChange={set("postal")} placeholder="123456" />
                   </div>
                   {zones.length > 0 && (
                     <React.Fragment>
-                      <span className="opt-label">Area · 地區</span>
+                      <span className="opt-label">Area · 地区</span>
                       <div className="slot-row">
                         {zones.map((z: any) => (
                           <button key={z.id} data-nofish="1" className={`slot ${zoneId === z.id ? "is-on" : ""}`} onClick={() => setZoneId(z.id)}>
@@ -260,7 +257,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               </div>
 
               {/* ── Preferred time slot ── */}
-              <span className="opt-label">Preferred time · 時段</span>
+              <span className="opt-label">Preferred time · 时段</span>
               <div className="slot-row">
                 {TIME_SLOTS.map((ts) => (
                   <button
@@ -276,7 +273,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
                 ))}
               </div>
 
-              <Field label={isPickup ? "Note" : "Note for delivery"} zh="備註" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide />
+              <Field label={isPickup ? "Note" : "Note for delivery"} zh="备注" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide />
             </section>
 
             <section className="ck-block">
@@ -313,15 +310,24 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
                 );
               })}
             </div>
-            <div className="summary-row"><span>Subtotal 小計</span><span>{priceStr(sub)}</span></div>
+            <div className="summary-row"><span>Subtotal 小计</span><span>{priceStr(sub)}</span></div>
             <div className="summary-row">
-              <span>{isPickup ? "Self pick-up 自取" : "Delivery 運費"}</span>
-              <span>{isPickup ? "Free 免費" : (ship === 0 ? "Free 免費" : priceStr(ship))}</span>
+              <span>{isPickup ? "Self pick-up 自取" : "Delivery 运费"}</span>
+              <span>{isPickup ? "Free 免费" : (ship === 0 ? "Free 免费" : priceStr(ship))}</span>
             </div>
-            <div className="summary-row total"><span>Total 總計</span><span>{priceStr(sub + ship)}</span></div>
-            <Btn disabled={!ready || isProcessing} onClick={() => ready && placeOrder()}>
-              {isProcessing ? "Redirecting..." : `Pay ${priceStr(sub + ship)} · 付款`}
+            {disc > 0 && (
+              <div className="summary-row member-disc"><span>{tier?.en} member −{Math.round(rate * 100)}%</span><span>−{priceStr(disc)}</span></div>
+            )}
+            <div className="summary-row total"><span>Total 总计</span><span>{priceStr(total)}</span></div>
+            {error && <p className="form-err" role="alert">{error}</p>}
+            <Btn disabled={!ready || isProcessing || cart.length === 0} onClick={() => ready && placeOrder()}>
+              {isProcessing ? "Redirecting..." : `Pay ${priceStr(total)} · 付款`}
             </Btn>
+            {!member && (
+              <p className="summary-hint member-hint">
+                <Link href="/club" data-nofish="1">Join the JoyJar Club</Link> free to save up to 15% as you level up.
+              </p>
+            )}
             <p className="summary-secure">🔒 Secure Checkout by HitPay</p>
           </aside>
         </div>

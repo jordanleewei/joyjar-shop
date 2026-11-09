@@ -11,12 +11,12 @@ import { Jar } from "./Jars";
 // 3×2 layout — back row sits further/higher, front row closer/lower.
 // Note: cy has been made negative to raise the back row up on the Y-axis.
 export const GB3_LAYOUT = [
-  { tone: "matcha", row: "back", cx: -86, cy: -75, cz: 0, s: 0.98, i: 3 },
-  { tone: "coconut", row: "back", cx: 0, cy: -75, cz: 0, s: 0.98, i: 4 },
-  { tone: "osmanthus", row: "back", cx: 86, cy: -75, cz: 0, s: 0.98, i: 5 },
-  { tone: "ginseng", row: "front", cx: -92, cy: -20, cz: 70, s: 1, i: 0 },
-  { tone: "date", row: "front", cx: 0, cy: -20, cz: 70, s: 1, i: 1 },
-  { tone: "sesame", row: "front", cx: 92, cy: -20, cz: 70, s: 1, i: 2 },
+  { tone: "rose", row: "back", cx: -86, cy: -75, cz: 0, s: 0.98, i: 3 },
+  { tone: "calm", row: "back", cx: 0, cy: -75, cz: 0, s: 0.98, i: 4 },
+  { tone: "pandan", row: "back", cx: 86, cy: -75, cz: 0, s: 0.98, i: 5 },
+  { tone: "pandan", row: "front", cx: -92, cy: -20, cz: 70, s: 1, i: 0 },
+  { tone: "noir", row: "front", cx: 0, cy: -20, cz: 70, s: 1, i: 1 },
+  { tone: "rose", row: "front", cx: 92, cy: -20, cz: 70, s: 1, i: 2 },
 ];
 
 const GB3_FLOOR = 78; // must match --floorY in giftbox3d.css
@@ -69,8 +69,8 @@ export function GiftBox3D({ caption = true, slots, fill }: { caption?: boolean, 
           <div className="gb3-panel gb3-front">
             <div className="gb3-sheen" />
             <div className="gb3-plaque">
-              <span className="gb3-plaque-zh">養生六味</span>
-              <span className="gb3-plaque-en">Wellness</span>
+              <span className="gb3-plaque-zh">胶傲礼盒</span>
+              <span className="gb3-plaque-en">Box of Six</span>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export function GiftBox3D({ caption = true, slots, fill }: { caption?: boolean, 
             <div className="gb3-seigaiha" />
             <div className="gb3-rib-h" />
             <div className="gb3-bow"><i /><i /></div>
-            <div className="gb3-seal">膠</div>
+            <div className="gb3-seal">胶</div>
           </div>
         </div>
       </div>

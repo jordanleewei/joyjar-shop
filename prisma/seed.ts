@@ -2,67 +2,63 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Safe to re-run: everything is upserted. Flavours not listed here are hidden
+// (available = false) rather than deleted, so old orders still make sense.
+
+const ALLERGENS = "Contains milk, fish products, and wheat products containing gluten."
+const ALLERGENS_CALM = "Contains milk, fish products, tree nuts (almond), and wheat products containing gluten."
+
 const DEFAULT_PRODUCTS = [
-  { id:"matcha", tone:"matcha", cap:"MATCHA", available:true,
-    name:"Matcha Lily Bulb Lotus Seed Fish Maw", nameZh:"抹茶百合蓮子花膠",
-    flavorEn:"Matcha · Lily · Lotus", flavorZh:"抹茶百合蓮子",
-    blurb:"Stone-ground matcha folded into silky collagen broth, with lily bulb and lotus seed.",
-    blurbZh:"石磨抹茶融入絲滑花膠，佐百合與蓮子。",
-    notes:["Stone-ground matcha","Lily bulb · Lotus seed","Collagen-rich"],
-    notesZh:["石磨抹茶","鮮百合 · 蓮子","豐潤花膠"],
-    options:{ sweet:true, temp:true, milk:true } },
+  { id: "pandan", tone: "pandan", cap: "PANDAN", sortOrder: 1,
+    name: "Pandan Fish Maw", nameZh: "班兰花胶",
+    flavorEn: "Pandan", flavorZh: "班兰",
+    tagline: "A taste of Nanyang, a radiant glow of confidence.", taglineZh: "一罐南洋风，双重胶傲美",
+    blurb: "Golden fish maw slow-stewed with mung beans, red dates and longan, finished in fresh pandan juice and milk, sweetened with coconut sugar.",
+    blurbZh: "花胶慢炖绿豆、红枣与桂圆，融入新鲜班兰汁与牛奶，以椰糖轻轻提甜。",
+    ingredients: "Milk, Fish Maw, Pandan Juice, Mung Beans, Red Dates, Dried Longan, and Coconut Sugar",
+    ingredientsZh: "牛奶、花胶、班兰汁、绿豆、红枣、桂圆干、椰糖",
+    notes: ["Fresh pandan juice", "Mung bean · Red date · Longan", "Coconut sugar"],
+    notesZh: ["新鲜班兰汁", "绿豆 · 红枣 · 桂圆", "椰糖"] },
 
-  { id:"sesame", tone:"sesame", cap:"SESAME", available:true,
-    name:"Black Sesame Walnut Fish Maw", nameZh:"黑芝麻核桃花膠",
-    flavorEn:"Black Sesame · Walnut", flavorZh:"黑芝麻核桃",
-    blurb:"Toasted black sesame and walnut, stone-ground into a velvety, nutty stew.",
-    blurbZh:"炒香黑芝麻與核桃研磨，濃郁綿滑。",
-    notes:["Toasted black sesame","Walnut","Velvety"],
-    notesZh:["焙香黑芝麻","核桃","綿滑"],
-    options:{ sweet:true, temp:true, milk:true } },
+  { id: "noir", tone: "noir", cap: "NOIR", sortOrder: 2,
+    name: "Noir Fish Maw", nameZh: "墨玉花胶",
+    flavorEn: "Noir", flavorZh: "墨玉",
+    tagline: "Late nights, BEGONE! Peak state, ON!", taglineZh: "熬夜退退退，状态对对对！",
+    blurb: "Fish maw with purple rice, red dates and longan, set in a toasty black bean and sesame milk with rock sugar.",
+    blurbZh: "花胶配紫米、红枣与桂圆，融入香浓黑豆芝麻奶，冰糖调味。",
+    ingredients: "Milk, Fish Maw, Black Bean Sesame Powder, Purple Rice, Red Dates, Dried Longan, and Rock Sugar",
+    ingredientsZh: "牛奶、花胶、黑豆芝麻粉、紫米、红枣、桂圆干、冰糖",
+    notes: ["Black bean & sesame", "Purple rice · Red date · Longan", "Rock sugar"],
+    notesZh: ["黑豆芝麻", "紫米 · 红枣 · 桂圆", "冰糖"] },
 
-  { id:"date", tone:"date", cap:"RED DATE", available:true,
-    name:"Red Date & Longan Fish Maw", nameZh:"紅棗桂圓花膠",
-    flavorEn:"Red Date · Longan", flavorZh:"紅棗桂圓",
-    blurb:"Warming red dates and dried longan stewed for a naturally sweet, blood-nourishing jar.",
-    blurbZh:"紅棗桂圓慢燉，自然回甘，補血暖身。",
-    notes:["Red dates","Dried longan","Naturally sweet"],
-    notesZh:["紅棗","桂圓乾","自然回甘"],
-    options:{ sweet:true, temp:true, milk:false } },
+  { id: "calm", tone: "calm", cap: "CALM", sortOrder: 3, allergens: ALLERGENS_CALM,
+    name: "Calm Fish Maw", nameZh: "清心花胶",
+    flavorEn: "Calm", flavorZh: "清心",
+    tagline: "Keep calm and scoop on.", taglineZh: "清心一口，烦恼退退退",
+    blurb: "Fish maw with oat groats, longan and red dates in a gentle matcha almond milk, lightly sweetened with rock sugar.",
+    blurbZh: "花胶配燕麦粒、桂圆与红枣，融入清新抹茶杏仁奶，冰糖淡甜。",
+    ingredients: "Milk, Fish Maw, Matcha and Almond Powder, Oat Groats, Dried Longan, Red Dates, and Rock Sugar",
+    ingredientsZh: "牛奶、花胶、抹茶杏仁粉、燕麦粒、桂圆干、红枣、冰糖",
+    notes: ["Matcha & almond", "Oat groats · Longan · Red date", "Rock sugar"],
+    notesZh: ["抹茶杏仁", "燕麦粒 · 桂圆 · 红枣", "冰糖"] },
 
-  { id:"ginseng", tone:"ginseng", cap:"GINSENG", available:true,
-    name:"American Ginseng & Goji Fish Maw", nameZh:"花旗參枸杞花膠",
-    flavorEn:"Ginseng · Goji", flavorZh:"花旗參枸杞",
-    blurb:"Cooling American ginseng with goji berries — restorative without the heat.",
-    blurbZh:"花旗參配枸杞，清補不燥。",
-    notes:["American ginseng","Goji berry","Restorative"],
-    notesZh:["花旗參","枸杞","清補"],
-    options:{ sweet:true, temp:true, milk:false } },
-
-  { id:"coconut", tone:"coconut", cap:"COCONUT", available:true,
-    name:"Coconut Snow Fungus Fish Maw", nameZh:"椰皇雪耳花膠",
-    flavorEn:"Coconut · Snow Fungus", flavorZh:"椰皇雪耳",
-    blurb:"Fragrant coconut and snow fungus for a light, skin-loving, collagen-rich jar.",
-    blurbZh:"椰皇雪耳，清潤養顏，膠質豐盈。",
-    notes:["Coconut","Snow fungus","Light & fragrant"],
-    notesZh:["椰皇","雪耳","清潤"],
-    options:{ sweet:true, temp:true, milk:true } },
-
-  { id:"osmanthus", tone:"osmanthus", cap:"OSMANTHUS", available:true,
-    name:"Osmanthus & Snow Pear Fish Maw", nameZh:"桂花雪梨花膠",
-    flavorEn:"Osmanthus · Snow Pear", flavorZh:"桂花雪梨",
-    blurb:"Honeyed osmanthus and snow pear — throat-soothing and delicately floral.",
-    blurbZh:"桂花蜜香配雪梨，潤喉清雅。",
-    notes:["Osmanthus","Snow pear","Floral & moistening"],
-    notesZh:["桂花","雪梨","潤燥"],
-    options:{ sweet:true, temp:true, milk:false } },
+  { id: "rose", tone: "rose", cap: "ROSE", sortOrder: 4,
+    name: "Rose Fish Maw", nameZh: "玫瑰花胶",
+    flavorEn: "Rose", flavorZh: "玫瑰",
+    tagline: "Rosy cheeks, zero filter needed.", taglineZh: "玫瑰一口，素颜也胶傲",
+    blurb: "Fish maw with red beans, longan and red dates in a fragrant rose milk, sweetened with coconut sugar.",
+    blurbZh: "花胶配红豆、桂圆与红枣，融入芬芳玫瑰奶，椰糖调味。",
+    ingredients: "Milk, Fish Maw, Rose Powder, Red Beans, Dried Longan, Red Dates, and Coconut Sugar",
+    ingredientsZh: "牛奶、花胶、玫瑰粉、红豆、桂圆干、红枣、椰糖",
+    notes: ["Rose powder", "Red bean · Longan · Red date", "Coconut sugar"],
+    notesZh: ["玫瑰粉", "红豆 · 桂圆 · 红枣", "椰糖"] },
 ];
 
 const DEFAULT_BUNDLES = [
-  { id:"jar-6", title:"Box of Six", titleZh:"六瓶禮盒", qty:6, price:68, featured:true,
-    note:"Best value · gift-ready.", noteZh:"最超值 · 禮盒裝" },
-  { id:"jar-1", title:"Single Jar", titleZh:"單瓶", qty:1, price:15.8, featured:false,
-    note:"One jar to taste the ritual.", noteZh:"單瓶淺嚐" },
+  { id: "jar-6", title: "Box of Six", titleZh: "六瓶礼盒", qty: 6, price: 68, featured: true,
+    note: "Best value · gift-ready.", noteZh: "最超值 · 礼盒装" },
+  { id: "jar-1", title: "Single Jar", titleZh: "单瓶", qty: 1, price: 15.8, featured: false,
+    note: "One jar to taste the ritual.", noteZh: "单瓶浅尝" },
 ];
 
 const DEFAULT_DELIVERY = {
@@ -71,14 +67,14 @@ const DEFAULT_DELIVERY = {
   slots: [
     "Tomorrow · 明日  10:00–13:00",
     "Tomorrow · 明日  18:00–21:00",
-    "Sat · 週六  10:00–13:00",
-    "Sun · 週日  14:00–17:00",
+    "Sat · 周六  10:00–13:00",
+    "Sun · 周日  14:00–17:00",
   ],
   zones: [
-    { id:"central", name:"Central", nameZh:"中區", fee:6 },
-    { id:"east",    name:"East",    nameZh:"東區", fee:6 },
-    { id:"west",    name:"West",    nameZh:"西區", fee:8 },
-    { id:"north",   name:"North / NE", nameZh:"北區", fee:8 },
+    { id: "central", name: "Central", nameZh: "中区", fee: 6 },
+    { id: "east", name: "East", nameZh: "东区", fee: 6 },
+    { id: "west", name: "West", nameZh: "西区", fee: 8 },
+    { id: "north", name: "North / NE", nameZh: "北区", fee: 8 },
   ],
   note: "We self-deliver every jar by hand, chilled and ready to enjoy.",
 };
@@ -86,80 +82,39 @@ const DEFAULT_DELIVERY = {
 async function main() {
   console.log("Seeding database...")
 
-  // Clear existing data
-  await prisma.product.deleteMany()
-  await prisma.bundle.deleteMany()
-  await prisma.deliveryConfig.deleteMany()
-  await prisma.deliverySlot.deleteMany()
-  await prisma.deliveryZone.deleteMany()
-
-  // Seed Products
-  for (const product of DEFAULT_PRODUCTS) {
-    await prisma.product.create({
-      data: {
-        id: product.id,
-        name: product.name,
-        nameZh: product.nameZh,
-        flavorEn: product.flavorEn,
-        flavorZh: product.flavorZh,
-        blurb: product.blurb,
-        blurbZh: product.blurbZh,
-        notes: JSON.stringify(product.notes),
-        notesZh: JSON.stringify(product.notesZh),
-        options: JSON.stringify(product.options),
-        tone: product.tone,
-        cap: product.cap,
-        available: product.available,
-      }
-    })
-  }
-
-  // Seed Bundles
-  for (const bundle of DEFAULT_BUNDLES) {
-    await prisma.bundle.create({
-      data: {
-        id: bundle.id,
-        title: bundle.title,
-        titleZh: bundle.titleZh,
-        qty: bundle.qty,
-        price: bundle.price,
-        featured: bundle.featured,
-        note: bundle.note,
-        noteZh: bundle.noteZh,
-      }
-    })
-  }
-
-  // Seed Delivery Config
-  await prisma.deliveryConfig.create({
-    data: {
-      id: 1,
-      freeThreshold: DEFAULT_DELIVERY.freeThreshold,
-      baseFee: DEFAULT_DELIVERY.baseFee,
-      note: DEFAULT_DELIVERY.note,
+  const ids = DEFAULT_PRODUCTS.map((p) => p.id)
+  for (const p of DEFAULT_PRODUCTS) {
+    const data = {
+      name: p.name, nameZh: p.nameZh, flavorEn: p.flavorEn, flavorZh: p.flavorZh,
+      blurb: p.blurb, blurbZh: p.blurbZh,
+      notes: JSON.stringify(p.notes), notesZh: JSON.stringify(p.notesZh),
+      options: JSON.stringify({ sweet: true }),
+      tone: p.tone, cap: p.cap, available: true,
+      tagline: p.tagline, taglineZh: p.taglineZh,
+      ingredients: p.ingredients, ingredientsZh: p.ingredientsZh,
+      allergens: (p as any).allergens || ALLERGENS, sortOrder: p.sortOrder,
     }
-  })
+    await prisma.product.upsert({ where: { id: p.id }, update: data, create: { id: p.id, ...data } })
+  }
+  // hide retired flavours (matcha, sesame, …) instead of deleting them
+  await prisma.product.updateMany({ where: { id: { notIn: ids } }, data: { available: false } })
 
-  // Seed Delivery Slots
-  for (let i = 0; i < DEFAULT_DELIVERY.slots.length; i++) {
-    await prisma.deliverySlot.create({
-      data: {
-        text: DEFAULT_DELIVERY.slots[i],
-        orderIndex: i,
-      }
-    })
+  for (const b of DEFAULT_BUNDLES) {
+    const { id, ...data } = b
+    await prisma.bundle.upsert({ where: { id }, update: data, create: b })
   }
 
-  // Seed Delivery Zones
-  for (const zone of DEFAULT_DELIVERY.zones) {
-    await prisma.deliveryZone.create({
-      data: {
-        id: zone.id,
-        name: zone.name,
-        nameZh: zone.nameZh,
-        fee: zone.fee,
-      }
-    })
+  const cfg = { freeThreshold: DEFAULT_DELIVERY.freeThreshold, baseFee: DEFAULT_DELIVERY.baseFee, note: DEFAULT_DELIVERY.note }
+  await prisma.deliveryConfig.upsert({ where: { id: 1 }, update: cfg, create: { id: 1, ...cfg } })
+
+  await prisma.deliverySlot.deleteMany()
+  for (let i = 0; i < DEFAULT_DELIVERY.slots.length; i++) {
+    await prisma.deliverySlot.create({ data: { text: DEFAULT_DELIVERY.slots[i], orderIndex: i } })
+  }
+
+  for (const z of DEFAULT_DELIVERY.zones) {
+    const { id, ...data } = z
+    await prisma.deliveryZone.upsert({ where: { id }, update: data, create: z })
   }
 
   console.log("Database seeded!")

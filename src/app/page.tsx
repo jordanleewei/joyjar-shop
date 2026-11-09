@@ -1,16 +1,15 @@
 import React from "react";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { Header, Footer } from "@/components/layout/Shared";
-import { Hero, BundleCard, FlavorCard, Benefits, GiftBlock } from "@/components/ui/ShopBlocks";
+import { Hero, BundleCard, Benefits, GiftBlock } from "@/components/ui/ShopBlocks";
 import { Wave, Label } from "@/components/ui/components";
 import { FishProvider } from "@/components/ui/Fish";
-
-const prisma = new PrismaClient();
+import { Marquee, FlavourShowcase, Journey, PopSection, ClubTeaser, Faq } from "@/components/story/Story";
 
 export const revalidate = 3600; // Cache for 1 hour
 
 export default async function ShopScreen() {
-  const products = await prisma.product.findMany({ where: { available: true } });
+  const products = await prisma.product.findMany({ where: { available: true }, orderBy: { sortOrder: "asc" } });
   const bundles = await prisma.bundle.findMany();
   const deliveryConfig = await prisma.deliveryConfig.findUnique({ where: { id: 1 } });
 
@@ -20,11 +19,11 @@ export default async function ShopScreen() {
       <FishProvider />
       <Header />
       <Hero heroLayout="split" bundles={bundles} deliveryConfig={deliveryConfig} />
-      <Wave className="wave-sep" />
-      <section className="bundles" id="bundles">
+      <Marquee />
+      <section className="bundles" id="shop">
         <div className="wrap">
           <div className="section-head center">
-            <Label zh="選購方案">Choose Your Jars</Label>
+            <Label zh="选购方案">Choose Your Jars</Label>
             <h2 className="section-title">Two ways to begin</h2>
           </div>
           <div className="bundle-grid">
@@ -34,23 +33,14 @@ export default async function ShopScreen() {
           </div>
         </div>
       </section>
-      <section className="products" id="products">
-        <div className="wrap">
-          <div className="section-head center">
-            <Label zh="六款風味">Six Flavours</Label>
-            <h2 className="section-title">Choose your stew</h2>
-            <p className="section-lede">Every jar can be made with sugar or none, served hot or cold.</p>
-          </div>
-          <div className="flavor-grid">
-            {products.map((p) => (
-              <FlavorCard key={p.id} p={p} />
-            ))}
-          </div>
-        </div>
-      </section>
-      <Wave className="wave-sep" />
+      <FlavourShowcase products={products} />
+      <Journey />
+      <PopSection />
       <Benefits />
+      <ClubTeaser />
       <GiftBlock bundles={bundles} />
+      <Wave className="wave-sep" />
+      <Faq />
       <Footer />
     </div>
   );
