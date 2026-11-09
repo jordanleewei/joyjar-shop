@@ -81,61 +81,58 @@ function makeFishEl(kind: "koi" | "blue", size: number) {
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pickKind = () => (Math.random() < 0.5 ? "koi" : "blue");
 
-// Splash on click: a ripple ring, a few droplets and a ring of fish darting outward.
+// Button press: a little school swims out of the button in a spiral.
+// Each fish follows a widening spiral, faces the way it's heading and swishes its tail.
 export function spawnBurst(x: number, y: number, _motion = "auto", count = 6) {
   if (typeof window === "undefined") return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const layer = fishLayer();
   if (!layer) return;
-  const ease = "cubic-bezier(.12,.75,.3,1)"; // fast pop, soft landing
 
-  // ripple ring
-  const ring = document.createElement("div");
-  ring.style.cssText = `position:absolute;left:${x - 22}px;top:${y - 22}px;width:44px;height:44px;border-radius:50%;` +
-    `border:2px solid rgba(111,156,196,.55);box-shadow:0 0 0 1px rgba(191,160,99,.25) inset;pointer-events:none;`;
-  layer.appendChild(ring);
-  ring.animate([
-    { transform: "scale(.2)", opacity: 0.9 },
-    { transform: "scale(2.6)", opacity: 0 },
-  ], { duration: 650, easing: "cubic-bezier(.2,.7,.3,1)", fill: "both" }).onfinish = () => ring.remove();
-
-  // droplets
-  for (let i = 0; i < 7; i++) {
-    const a = rnd(0, Math.PI * 2), dist = rnd(26, 58), r = rnd(3, 6);
-    const d = document.createElement("div");
-    d.style.cssText = `position:absolute;left:${x - r}px;top:${y - r}px;width:${r * 2}px;height:${r * 2}px;border-radius:50%;` +
-      `background:${Math.random() < 0.5 ? "rgba(111,156,196,.7)" : "rgba(231,201,166,.85)"};pointer-events:none;`;
-    layer.appendChild(d);
-    d.animate([
-      { transform: "translate(0,0) scale(.4)", opacity: 1 },
-      { transform: `translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist + 14}px) scale(1)`, opacity: 0 },
-    ], { duration: rnd(420, 620), easing: ease, fill: "both" }).onfinish = () => d.remove();
-  }
-
-  // fish fan out evenly around the point, each facing the way it swims
-  const base = rnd(0, 360);
+  const dir = Math.random() < 0.5 ? 1 : -1;          // whole school turns the same way
+  const start = rnd(0, Math.PI * 2);
+  const turns = rnd(0.75, 0.95) * Math.PI * 2;         // how far round each fish travels
   for (let i = 0; i < count; i++) {
     const kind = pickKind();
-    const size = rnd(30, 46);
+    const size = rnd(40, 56);
     const h = size * 0.69;
     const el = makeFishEl(kind, size);
     el.style.left = (x - size / 2) + "px";
     el.style.top = (y - h / 2) + "px";
     layer.appendChild(el);
 
-    const deg = base + (360 / count) * i + rnd(-14, 14);
-    const rad = deg * Math.PI / 180;
-    const dist = rnd(70, 120);
-    const dx = Math.cos(rad) * dist, dy = Math.sin(rad) * dist;
-    const flip = Math.cos(rad) < 0 ? " scaleY(-1)" : ""; // keep fish upright when heading left
-    const wig = rnd(6, 12);
-    const frames = [
-      { transform: `translate(0px,0px) rotate(${deg}deg)${flip} scale(.15)`, opacity: 0 },
-      { transform: `translate(${dx * 0.45}px,${dy * 0.45}px) rotate(${deg + wig}deg)${flip} scale(1)`, opacity: 1, offset: 0.28 },
-      { transform: `translate(${dx * 0.8}px,${dy * 0.8 + 6}px) rotate(${deg - wig}deg)${flip} scale(.95)`, opacity: 1, offset: 0.62 },
-      { transform: `translate(${dx}px,${dy + 18}px) rotate(${deg}deg)${flip} scale(.7)`, opacity: 0 },
-    ];
-    el.animate(frames, { duration: rnd(780, 980), delay: i * 18, easing: ease, fill: "both" }).onfinish = () => el.remove();
+    const a0 = start + (Math.PI * 2 / count) * i;
+    const rMax = rnd(110, 170);
+    const N = 28;
+    const pts: { x: number; y: number }[] = [];
+    for (let s2 = 0; s2 <= N; s2++) {
+      const t = s2 / N;
+      const r = 8 + rMax * Math.pow(t, 0.85);
+      const a = a0 + dir * turns * t;
+      pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+    }
+    const frames: Keyframe[] = pts.map((pt, k) => {
+      const nx = pts[Math.min(N, k + 1)], px = pts[Math.max(0, k - 1)];
+      let ang = Math.atan2(nx.y - px.y, nx.x - px.x) * 180 / Math.PI;
+      const flip = Math.cos(ang * Math.PI / 180) < 0 ? " scaleY(-1)" : ""; // stay belly-down
+      const t = k / N;
+      const sc = t < 0.15 ? 0.45 + t / 0.15 * 0.55 : 1 - Math.max(0, t - 0.7) * 0.5;
+      return {
+        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${ang.toFixed(1)}deg)${flip} scale(${sc.toFixed(2)})`,
+        opacity: t < 0.08 ? t / 0.08 : t > 0.8 ? (1 - t) / 0.2 : 1,
+        offset: t,
+      };
+    });
+    const dur = rnd(1500, 1900);
+    el.animate(frames, { duration: dur, delay: i * 40, easing: "cubic-bezier(.25,.6,.35,1)", fill: "both" }).onfinish = () => el.remove();
+    // tail swish so it reads as swimming
+    const svg = el.firstElementChild as HTMLElement | null;
+    if (svg) {
+      svg.style.transformOrigin = "78% 50%";
+      svg.animate([
+        { transform: "rotate(-9deg)" }, { transform: "rotate(9deg)" },
+      ], { duration: rnd(170, 230), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
+    }
   }
 }
 
@@ -195,11 +192,13 @@ export function checkoutSwim(onDone?: () => void, opts: any = {}) {
 export function FishProvider() {
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      // fish on every click, anywhere — except while typing in a form field
+      // fish swim out of buttons (any <button>, button-style link or [data-fish])
       const t = e.target as HTMLElement;
-      if (t.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (e.clientX === 0 && e.clientY === 0) return; // keyboard-triggered clicks
-      spawnBurst(e.clientX, e.clientY, "auto", t.closest("[data-fish]") ? 7 : 5);
+      const btn = t.closest("button, [role='button'], a.btn, a.cart-btn, a.member-btn, a.nav-pill, [data-fish]") as HTMLElement | null;
+      if (!btn || (btn as HTMLButtonElement).disabled) return;
+      let x = e.clientX, y = e.clientY;
+      if (x === 0 && y === 0) { const r = btn.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }
+      spawnBurst(x, y, "auto", btn.matches(".btn, [data-fish]") ? 7 : 5);
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);

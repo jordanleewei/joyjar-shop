@@ -62,7 +62,7 @@ export function FlavourShowcase({ products }: { products: any[] }) {
 }
 
 /* ---------------- Into our kitchen (autoplay journey) ---------------- */
-const STEP_MS = 4200;
+const STEP_MS = 1500;
 
 export function Journey() {
   const [active, setActive] = useState(0);
