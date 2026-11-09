@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Label, Btn, Wave } from "./components";
 import { Jar } from "./Jars";
 import { WellnessGiftBox } from "./GiftBox3D";
+import { JingleInline } from "./Jingle";
 import { BENEFITS, DISCLAIMER, DISCLAIMER_ZH } from "@/lib/constants";
 
 export function priceStr(n: number) {
@@ -19,10 +20,11 @@ export function Hero({ heroLayout = "split", bundles, deliveryConfig }: any) {
       <div className="wrap hero-inner">
         <div className="hero-copy">
           <Label zh="鲜炖花胶 · 新加坡制作">Fresh fish maw, in a jar</Label>
-          <h1 className="hero-title hero-title-zh">
-            一罐花胶，<br /><em>满满胶傲。</em>
+          <h1 className="hero-title">
+            Joy to <em>the World!</em>
           </h1>
-          <p className="hero-en-sub">One jar of fish maw, a whole lot of glow.</p>
+          <p className="hero-zh">一罐花胶，满满胶傲</p>
+          <JingleInline />
           <p className="hero-lede">
             Golden fish maw, double-boiled for a full hour with real ingredients and fresh milk.
             Four flavours, no preservatives, made fresh in Singapore.
@@ -129,8 +131,7 @@ export function GiftBlock({ bundles }: any) {
         </div>
         <div className="gift-copy">
           <Label zh="送礼 · 心意">A Gift of Wellness</Label>
-          <h2 className="section-title gift-title-zh">把心意，<em>慢慢炖进罐里。</em></h2>
-          <p className="gift-en-sub">Your care, slow-stewed into every jar.</p>
+          <h2 className="section-title">Joy to <em>your friends!</em></h2>
           <p className="section-lede">
             Six jars, mixed and matched, gift-ready with free delivery. For the friend who works too late,
             the mum who never rests, and you.

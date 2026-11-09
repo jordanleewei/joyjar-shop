@@ -1003,3 +1003,42 @@ html{ scroll-padding-top:90px; }
 .logo-full{ height:auto; }
 @media (max-width:520px){ .logo-horizontal{ height:44px; } }
 .gift-copy .section-title em{ color:var(--cinnabar); }
+
+/* Chinese-led headlines */
+.hero-title-zh{ font-family:var(--font-zh); font-weight:600; letter-spacing:.06em; font-size:clamp(40px,5.6vw,72px); line-height:1.18; }
+.hero-title-zh em{ font-style:normal; }
+.hero-en-sub{ font-family:var(--font-display); font-style:italic; font-size:clamp(20px,2.2vw,26px); color:var(--ink-soft); margin:16px 0 0; }
+.gift-title-zh{ font-family:var(--font-zh); font-weight:600; letter-spacing:.06em; line-height:1.3; }
+.gift-title-zh em{ font-style:normal; color:var(--cinnabar); }
+.gift-en-sub{ font-family:var(--font-display); font-style:italic; font-size:21px; color:var(--ink-soft); margin:10px 0 0; }
+
+/* ---------- JoyJar song player ---------- */
+.jingle{ position:fixed; left:18px; bottom:18px; z-index:60; display:flex; align-items:center; gap:10px; padding:8px 16px 8px 8px;
+  background:var(--paper); border:1.5px solid var(--ink); border-radius:999px; box-shadow:4px 5px 0 var(--ink), 0 18px 30px -18px rgba(60,40,20,.5);
+  color:var(--ink); text-align:left; transition:transform .15s; }
+.jingle:hover{ transform:translateY(-2px); }
+.jingle:active{ transform:translate(2px,2px); box-shadow:2px 3px 0 var(--ink); }
+.jingle-icon{ position:relative; width:40px; height:40px; flex:none; display:grid; place-items:center; background:var(--cinnabar); color:#fbf3ec; border-radius:50%; }
+.jingle-icon svg{ position:absolute; inset:-3px; width:46px; height:46px; transform:rotate(-90deg); }
+.jingle-track{ fill:none; stroke:transparent; stroke-width:2.5; }
+.jingle-prog{ fill:none; stroke:var(--gold); stroke-width:2.5; stroke-linecap:round; stroke-dasharray:100.5; transition:stroke-dashoffset .3s linear; }
+.jingle-icon b{ font-size:15px; line-height:1; }
+.jingle-text{ display:flex; flex-direction:column; line-height:1.15; }
+.jingle-text strong{ font-size:13.5px; letter-spacing:.02em; }
+.jingle-text small{ font-family:var(--font-zh); font-size:11px; color:var(--ink-soft); letter-spacing:.04em; }
+.jingle-bars{ display:flex; align-items:flex-end; gap:2px; height:16px; margin-left:2px; }
+.jingle-bars i{ width:3px; background:var(--cinnabar); border-radius:2px; animation:jbar .8s ease-in-out infinite alternate; }
+.jingle-bars i:nth-child(2){ animation-delay:-.2s; } .jingle-bars i:nth-child(3){ animation-delay:-.45s; } .jingle-bars i:nth-child(4){ animation-delay:-.65s; }
+@keyframes jbar{ from{ height:3px; } to{ height:16px; } }
+.jingle.is-playing .jingle-icon{ animation:jpulse 1.2s ease-in-out infinite; }
+@keyframes jpulse{ 50%{ box-shadow:0 0 0 6px color-mix(in srgb,var(--cinnabar) 22%, transparent); } }
+.jingle-inline{ margin-top:14px; display:inline-flex; align-items:center; gap:10px; background:none; border:none; padding:0; font-size:15px; color:var(--ink); cursor:pointer; }
+.jingle-inline em{ font-family:var(--font-display); font-size:18px; color:var(--cinnabar); }
+.ji-dot{ width:30px; height:30px; border-radius:50%; border:1.5px solid var(--cinnabar); color:var(--cinnabar); display:grid; place-items:center; font-size:11px; }
+.jingle-inline:hover .ji-dot,.jingle-inline.is-playing .ji-dot{ background:var(--cinnabar); color:#fbf3ec; }
+@media (max-width:520px){
+  .jingle{ left:12px; bottom:12px; padding:6px; }
+  .jingle-text{ display:none; }
+  .jingle-bars{ margin-right:6px; }
+}
+@media (prefers-reduced-motion: reduce){ .jingle-bars i,.jingle.is-playing .jingle-icon{ animation:none; } }
