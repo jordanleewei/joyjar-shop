@@ -81,62 +81,58 @@ function makeFishEl(kind: "koi" | "blue", size: number) {
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pickKind = () => (Math.random() < 0.5 ? "koi" : "blue");
 
-// Button press: a few fish wander out of the button, each squiggling gently
-// outward in its own direction, slowly, then fading away.
+// Button press: a few fish swirl out of the button. Each takes a gentle, slightly
+// different curve (own turn amount, direction, speed and a small wobble), so it reads
+// as a loose little school rather than a tight spiral.
 export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
   if (typeof window === "undefined") return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const layer = fishLayer();
   if (!layer) return;
 
-  const base = rnd(0, Math.PI * 2);
+  const mainDir = Math.random() < 0.5 ? 1 : -1;
+  const start = rnd(0, Math.PI * 2);
   for (let i = 0; i < count; i++) {
     const kind = pickKind();
-    const size = rnd(36, 48);
+    const size = rnd(38, 50);
     const h = size * 0.69;
     const el = makeFishEl(kind, size);
     el.style.left = (x - size / 2) + "px";
     el.style.top = (y - h / 2) + "px";
     layer.appendChild(el);
 
-    // spread fish around the button, but keep them off straight up/down so they stay belly-down
-    let heading = base + (Math.PI * 2 / count) * i + rnd(-0.35, 0.35);
-    const fromVertical = Math.abs(Math.cos(heading));
-    if (fromVertical < 0.45) heading += Math.sign(Math.cos(heading) || 1) * 0.5;
-    const flip = Math.cos(heading) < 0;
-
-    const dist = rnd(60, 95);                 // stays close to the button
-    const wiggles = rnd(1.5, 2.2);            // number of gentle S-curves
-    const amp = rnd(6, 10);                   // squiggle size
-    const phase = rnd(0, Math.PI * 2);
-    const ux = Math.cos(heading), uy = Math.sin(heading);   // forward
-    const px = -uy, py = ux;                                 // sideways
-    const N = 30;
+    const dir = Math.random() < 0.75 ? mainDir : -mainDir;   // mostly one way, the odd one turns back
+    const a0 = start + (Math.PI * 2 / count) * i + rnd(-0.5, 0.5);
+    const turn = rnd(0.28, 0.5) * Math.PI * 2;                 // under half a turn: swirly, not dizzy
+    const rMax = rnd(55, 85);
+    const wob = rnd(2, 5), wobF = rnd(2, 3.5), wobP = rnd(0, Math.PI * 2);
+    const N = 28;
     const pts: { x: number; y: number }[] = [];
     for (let k = 0; k <= N; k++) {
       const t = k / N;
-      const along = dist * (1 - Math.pow(1 - t, 2.2));      // quick dart, then glide      // eases to a stop
-      const side = Math.sin(t * Math.PI * 2 * wiggles + phase) * amp * (0.4 + t * 0.6);
-      pts.push({ x: ux * along + px * side, y: uy * along + py * side });
+      const r = 6 + rMax * Math.pow(t, 0.8) + Math.sin(t * Math.PI * 2 * wobF + wobP) * wob * t;
+      const a = a0 + dir * turn * t;
+      pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
     }
     const frames: Keyframe[] = pts.map((pt, k) => {
-      const a = pts[Math.min(N, k + 1)], b = pts[Math.max(0, k - 1)];
-      const ang = Math.atan2(a.y - b.y, a.x - b.x) * 180 / Math.PI;
+      const nx = pts[Math.min(N, k + 1)], px = pts[Math.max(0, k - 1)];
+      const ang = Math.atan2(nx.y - px.y, nx.x - px.x) * 180 / Math.PI;
+      const flip = Math.cos(ang * Math.PI / 180) < 0 ? " scaleY(-1)" : ""; // stay belly-down
       const t = k / N;
-      const sc = t < 0.2 ? 0.55 + (t / 0.2) * 0.45 : 1;
+      const sc = t < 0.15 ? 0.5 + (t / 0.15) * 0.5 : 1 - Math.max(0, t - 0.75) * 0.6;
       return {
-        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${ang.toFixed(1)}deg)${flip ? " scaleY(-1)" : ""} scale(${sc.toFixed(2)})`,
-        opacity: t < 0.12 ? t / 0.12 : t > 0.65 ? Math.max(0, (1 - t) / 0.35) : 1,
+        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${ang.toFixed(1)}deg)${flip} scale(${sc.toFixed(2)})`,
+        opacity: t < 0.08 ? t / 0.08 : t > 0.75 ? Math.max(0, (1 - t) / 0.25) : 1,
         offset: t,
       };
     });
-    el.animate(frames, { duration: rnd(1150, 1450), delay: i * 50, easing: "linear", fill: "both" }).onfinish = () => el.remove();
-    // slow tail swish so it reads as swimming
+    el.animate(frames, { duration: rnd(1400, 1800), delay: i * rnd(30, 70), easing: "cubic-bezier(.25,.6,.35,1)", fill: "both" }).onfinish = () => el.remove();
+    // tail swish so it reads as swimming
     const svg = el.firstElementChild as HTMLElement | null;
     if (svg) {
       svg.style.transformOrigin = "78% 50%";
-      svg.animate([{ transform: "rotate(-7deg)" }, { transform: "rotate(7deg)" }],
-        { duration: rnd(150, 190), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
+      svg.animate([{ transform: "rotate(-8deg)" }, { transform: "rotate(8deg)" }],
+        { duration: rnd(170, 220), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
     }
   }
 }
