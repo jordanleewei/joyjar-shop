@@ -105,7 +105,7 @@ export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
     if (fromVertical < 0.45) heading += Math.sign(Math.cos(heading) || 1) * 0.5;
     const flip = Math.cos(heading) < 0;
 
-    const dist = rnd(48, 78);                 // stays close to the button
+    const dist = rnd(60, 95);                 // stays close to the button
     const wiggles = rnd(1.5, 2.2);            // number of gentle S-curves
     const amp = rnd(6, 10);                   // squiggle size
     const phase = rnd(0, Math.PI * 2);
@@ -115,7 +115,7 @@ export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
     const pts: { x: number; y: number }[] = [];
     for (let k = 0; k <= N; k++) {
       const t = k / N;
-      const along = dist * (1 - Math.pow(1 - t, 1.6));      // eases to a stop
+      const along = dist * (1 - Math.pow(1 - t, 2.2));      // quick dart, then glide      // eases to a stop
       const side = Math.sin(t * Math.PI * 2 * wiggles + phase) * amp * (0.4 + t * 0.6);
       pts.push({ x: ux * along + px * side, y: uy * along + py * side });
     }
@@ -130,13 +130,13 @@ export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
         offset: t,
       };
     });
-    el.animate(frames, { duration: rnd(2300, 2900), delay: i * 90, easing: "linear", fill: "both" }).onfinish = () => el.remove();
+    el.animate(frames, { duration: rnd(1150, 1450), delay: i * 50, easing: "linear", fill: "both" }).onfinish = () => el.remove();
     // slow tail swish so it reads as swimming
     const svg = el.firstElementChild as HTMLElement | null;
     if (svg) {
       svg.style.transformOrigin = "78% 50%";
       svg.animate([{ transform: "rotate(-7deg)" }, { transform: "rotate(7deg)" }],
-        { duration: rnd(280, 340), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
+        { duration: rnd(150, 190), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
     }
   }
 }
