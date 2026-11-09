@@ -81,57 +81,62 @@ function makeFishEl(kind: "koi" | "blue", size: number) {
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pickKind = () => (Math.random() < 0.5 ? "koi" : "blue");
 
-// Button press: a little school swims out of the button in a spiral.
-// Each fish follows a widening spiral, faces the way it's heading and swishes its tail.
-export function spawnBurst(x: number, y: number, _motion = "auto", count = 6) {
+// Button press: a few fish wander out of the button, each squiggling gently
+// outward in its own direction, slowly, then fading away.
+export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
   if (typeof window === "undefined") return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const layer = fishLayer();
   if (!layer) return;
 
-  const dir = Math.random() < 0.5 ? 1 : -1;          // whole school turns the same way
-  const start = rnd(0, Math.PI * 2);
-  const turns = rnd(0.75, 0.95) * Math.PI * 2;         // how far round each fish travels
+  const base = rnd(0, Math.PI * 2);
   for (let i = 0; i < count; i++) {
     const kind = pickKind();
-    const size = rnd(40, 56);
+    const size = rnd(36, 48);
     const h = size * 0.69;
     const el = makeFishEl(kind, size);
     el.style.left = (x - size / 2) + "px";
     el.style.top = (y - h / 2) + "px";
     layer.appendChild(el);
 
-    const a0 = start + (Math.PI * 2 / count) * i;
-    const rMax = rnd(110, 170);
-    const N = 28;
+    // spread fish around the button, but keep them off straight up/down so they stay belly-down
+    let heading = base + (Math.PI * 2 / count) * i + rnd(-0.35, 0.35);
+    const fromVertical = Math.abs(Math.cos(heading));
+    if (fromVertical < 0.45) heading += Math.sign(Math.cos(heading) || 1) * 0.5;
+    const flip = Math.cos(heading) < 0;
+
+    const dist = rnd(48, 78);                 // stays close to the button
+    const wiggles = rnd(1.5, 2.2);            // number of gentle S-curves
+    const amp = rnd(6, 10);                   // squiggle size
+    const phase = rnd(0, Math.PI * 2);
+    const ux = Math.cos(heading), uy = Math.sin(heading);   // forward
+    const px = -uy, py = ux;                                 // sideways
+    const N = 30;
     const pts: { x: number; y: number }[] = [];
-    for (let s2 = 0; s2 <= N; s2++) {
-      const t = s2 / N;
-      const r = 8 + rMax * Math.pow(t, 0.85);
-      const a = a0 + dir * turns * t;
-      pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+    for (let k = 0; k <= N; k++) {
+      const t = k / N;
+      const along = dist * (1 - Math.pow(1 - t, 1.6));      // eases to a stop
+      const side = Math.sin(t * Math.PI * 2 * wiggles + phase) * amp * (0.4 + t * 0.6);
+      pts.push({ x: ux * along + px * side, y: uy * along + py * side });
     }
     const frames: Keyframe[] = pts.map((pt, k) => {
-      const nx = pts[Math.min(N, k + 1)], px = pts[Math.max(0, k - 1)];
-      let ang = Math.atan2(nx.y - px.y, nx.x - px.x) * 180 / Math.PI;
-      const flip = Math.cos(ang * Math.PI / 180) < 0 ? " scaleY(-1)" : ""; // stay belly-down
+      const a = pts[Math.min(N, k + 1)], b = pts[Math.max(0, k - 1)];
+      const ang = Math.atan2(a.y - b.y, a.x - b.x) * 180 / Math.PI;
       const t = k / N;
-      const sc = t < 0.15 ? 0.45 + t / 0.15 * 0.55 : 1 - Math.max(0, t - 0.7) * 0.5;
+      const sc = t < 0.2 ? 0.55 + (t / 0.2) * 0.45 : 1;
       return {
-        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${ang.toFixed(1)}deg)${flip} scale(${sc.toFixed(2)})`,
-        opacity: t < 0.08 ? t / 0.08 : t > 0.8 ? (1 - t) / 0.2 : 1,
+        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${ang.toFixed(1)}deg)${flip ? " scaleY(-1)" : ""} scale(${sc.toFixed(2)})`,
+        opacity: t < 0.12 ? t / 0.12 : t > 0.65 ? Math.max(0, (1 - t) / 0.35) : 1,
         offset: t,
       };
     });
-    const dur = rnd(1500, 1900);
-    el.animate(frames, { duration: dur, delay: i * 40, easing: "cubic-bezier(.25,.6,.35,1)", fill: "both" }).onfinish = () => el.remove();
-    // tail swish so it reads as swimming
+    el.animate(frames, { duration: rnd(2300, 2900), delay: i * 90, easing: "linear", fill: "both" }).onfinish = () => el.remove();
+    // slow tail swish so it reads as swimming
     const svg = el.firstElementChild as HTMLElement | null;
     if (svg) {
       svg.style.transformOrigin = "78% 50%";
-      svg.animate([
-        { transform: "rotate(-9deg)" }, { transform: "rotate(9deg)" },
-      ], { duration: rnd(170, 230), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
+      svg.animate([{ transform: "rotate(-7deg)" }, { transform: "rotate(7deg)" }],
+        { duration: rnd(280, 340), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
     }
   }
 }
@@ -198,7 +203,7 @@ export function FishProvider() {
       if (!btn || (btn as HTMLButtonElement).disabled) return;
       let x = e.clientX, y = e.clientY;
       if (x === 0 && y === 0) { const r = btn.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }
-      spawnBurst(x, y, "auto", btn.matches(".btn, [data-fish]") ? 7 : 5);
+      spawnBurst(x, y, "auto", btn.matches(".btn, [data-fish]") ? 4 : 3);
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
