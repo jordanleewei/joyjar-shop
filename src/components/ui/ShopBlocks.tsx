@@ -20,7 +20,7 @@ export function Hero({ heroLayout = "split", bundles, deliveryConfig }: any) {
         <div className="hero-copy">
           <Label zh="鲜炖花胶 · 新加坡制作">Fresh fish maw, in a jar</Label>
           <h1 className="hero-title">
-            Slow-stewed joy,<br /><em>sealed in a jar.</em>
+            Little jar,<br /><em>big joy.</em>
           </h1>
           <p className="hero-zh">一罐花胶，满满胶傲</p>
           <p className="hero-lede">
@@ -129,10 +129,10 @@ export function GiftBlock({ bundles }: any) {
         </div>
         <div className="gift-copy">
           <Label zh="送礼 · 心意">A Gift of Wellness</Label>
-          <h2 className="section-title">Sealed with intention, ready to give.</h2>
+          <h2 className="section-title">The sweetest way<br />to say <em>take care.</em></h2>
           <p className="section-lede">
-            A box of six arrives gift-ready with free delivery — mix and match the four flavours
-            for someone who deserves a little joy (yourself included).
+            Six jars, mixed and matched, gift-ready with free delivery. For the friend who works too late,
+            the mum who never rests, and you.
           </p>
           <Link href={`/product/${boxBundle.id}`} passHref legacyBehavior>
             <Btn as="a">Send a box · 送出礼盒</Btn>

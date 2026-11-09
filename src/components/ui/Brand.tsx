@@ -76,16 +76,9 @@ function renderMark(style: string, size: number) {
   }
 }
 
-export function Logo({ onClick, compact = false }: { onClick?: () => void, compact?: boolean }) {
-  const style = "circle"; // Fixed brand choice from README
-  const size = compact ? 36 : 44;
-  return (
-    <button className={`logo logo-${style}`} onClick={onClick} data-nofish="1" aria-label="JoyJar home">
-      {renderMark(style, size)}
-      <span className="logo-text">
-        <span className="logo-zh">小胶傲</span>
-        <span className="logo-en">JoyJar</span>
-      </span>
-    </button>
-  );
+export function Logo({ compact = false }: { onClick?: () => void, compact?: boolean }) {
+  // Brand lockups drawn from the official 小胶傲.ai artwork
+  return compact
+    ? <img className="logo logo-stacked-img" src="/assets/joyjar-logo.svg" alt="小胶傲 JoyJar" width={96} height={115} draggable={false} />
+    : <img className="logo logo-horizontal" src="/assets/joyjar-logo-horizontal.svg" alt="小胶傲 JoyJar" width={127} height={52} draggable={false} />;
 }

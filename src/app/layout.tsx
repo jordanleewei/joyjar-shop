@@ -26,7 +26,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="icon" type="image/png" href="/assets/logo.png" />
+        <link rel="icon" type="image/svg+xml" href="/assets/joyjar-mark.svg" />
+        <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
       </head>
       <body>
         <FishProvider />

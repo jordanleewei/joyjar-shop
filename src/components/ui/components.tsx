@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 
 // Cinnabar seal stamp 印章 — auspicious brand mark
 export function Seal({ size = 56, style = {} }: { size?: number, style?: React.CSSProperties }) {
@@ -15,8 +14,8 @@ export function Seal({ size = 56, style = {} }: { size?: number, style?: React.C
 // Handmade circular logo badge (transparent PNG)
 export function LogoMark({ size = 46, className = "", style = {} }: { size?: number, className?: string, style?: React.CSSProperties }) {
   return (
-    <Image src="/assets/logo.png" width={size} height={size} alt="小胶傲 JoyJar"
-         className={`logo-img ${className}`} style={style} draggable={false} unoptimized={false} priority={true} />
+    <img src="/assets/joyjar-logo.svg" height={size} width={Math.round(size * 0.83)} alt="小胶傲 JoyJar"
+         className={`logo-full ${className}`} style={style} draggable={false} />
   );
 }
 

@@ -81,49 +81,61 @@ function makeFishEl(kind: "koi" | "blue", size: number) {
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pickKind = () => (Math.random() < 0.5 ? "koi" : "blue");
 
-// Burst on button press. motion: "bubble" | "swim" | "auto"
-export function spawnBurst(x: number, y: number, motion = "auto", count = 5) {
+// Splash on click: a ripple ring, a few droplets and a ring of fish darting outward.
+export function spawnBurst(x: number, y: number, _motion = "auto", count = 6) {
   if (typeof window === "undefined") return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const layer = fishLayer();
   if (!layer) return;
-  
+  const ease = "cubic-bezier(.12,.75,.3,1)"; // fast pop, soft landing
+
+  // ripple ring
+  const ring = document.createElement("div");
+  ring.style.cssText = `position:absolute;left:${x - 22}px;top:${y - 22}px;width:44px;height:44px;border-radius:50%;` +
+    `border:2px solid rgba(111,156,196,.55);box-shadow:0 0 0 1px rgba(191,160,99,.25) inset;pointer-events:none;`;
+  layer.appendChild(ring);
+  ring.animate([
+    { transform: "scale(.2)", opacity: 0.9 },
+    { transform: "scale(2.6)", opacity: 0 },
+  ], { duration: 650, easing: "cubic-bezier(.2,.7,.3,1)", fill: "both" }).onfinish = () => ring.remove();
+
+  // droplets
+  for (let i = 0; i < 7; i++) {
+    const a = rnd(0, Math.PI * 2), dist = rnd(26, 58), r = rnd(3, 6);
+    const d = document.createElement("div");
+    d.style.cssText = `position:absolute;left:${x - r}px;top:${y - r}px;width:${r * 2}px;height:${r * 2}px;border-radius:50%;` +
+      `background:${Math.random() < 0.5 ? "rgba(111,156,196,.7)" : "rgba(231,201,166,.85)"};pointer-events:none;`;
+    layer.appendChild(d);
+    d.animate([
+      { transform: "translate(0,0) scale(.4)", opacity: 1 },
+      { transform: `translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist + 14}px) scale(1)`, opacity: 0 },
+    ], { duration: rnd(420, 620), easing: ease, fill: "both" }).onfinish = () => d.remove();
+  }
+
+  // fish fan out evenly around the point, each facing the way it swims
+  const base = rnd(0, 360);
   for (let i = 0; i < count; i++) {
     const kind = pickKind();
-    const size = rnd(28, 48);
+    const size = rnd(30, 46);
+    const h = size * 0.69;
     const el = makeFishEl(kind, size);
-    const mode = motion === "auto" ? (Math.random() < 0.5 ? "bubble" : "swim") : motion;
     el.style.left = (x - size / 2) + "px";
-    el.style.top = (y - size / 2) + "px";
+    el.style.top = (y - h / 2) + "px";
     layer.appendChild(el);
 
-    const dur = rnd(900, 1500);
-    let frames: any;
-    if (mode === "swim") {
-      const dir = Math.random() < 0.5 ? -1 : 1;
-      const dist = rnd(80, 180) * dir;
-      const baseRot = dir < 0 ? 180 : 0; // face travel direction
-      frames = [
-        { transform: `translate(0,0) rotate(${baseRot}deg) scale(.4)`, opacity: 0 },
-        { transform: `translate(${dist * 0.3}px, ${rnd(-26, -10)}px) rotate(${baseRot + 8 * dir}deg) scale(1)`, opacity: 1, offset: 0.3 },
-        { transform: `translate(${dist * 0.65}px, ${rnd(8, 24)}px) rotate(${baseRot - 8 * dir}deg) scale(1)`, opacity: 1, offset: 0.65 },
-        { transform: `translate(${dist}px, ${rnd(-14, 6)}px) rotate(${baseRot}deg) scale(.85)`, opacity: 0 },
-      ];
-    } else {
-      // bubble: rise with sway, face upward-ish
-      const sway = rnd(-40, 40);
-      const rise = rnd(140, 240);
-      const rot = rnd(-90, -70);
-      frames = [
-        { transform: `translate(0,0) rotate(${rot}deg) scale(.35)`, opacity: 0 },
-        { transform: `translate(${sway * 0.4}px, ${-rise * 0.4}px) rotate(${rot + 12}deg) scale(1)`, opacity: 1, offset: 0.35 },
-        { transform: `translate(${sway}px, ${-rise}px) rotate(${rot - 12}deg) scale(.7)`, opacity: 0 },
-      ];
-    }
-    const anim = el.animate(frames, {
-      duration: dur, delay: i * 70, easing: "cubic-bezier(.33,.0,.2,1)", fill: "forwards",
-    });
-    anim.onfinish = () => el.remove();
+    const deg = base + (360 / count) * i + rnd(-14, 14);
+    const rad = deg * Math.PI / 180;
+    const dist = rnd(70, 120);
+    const dx = Math.cos(rad) * dist, dy = Math.sin(rad) * dist;
+    const flip = Math.cos(rad) < 0 ? " scaleY(-1)" : ""; // keep fish upright when heading left
+    const wig = rnd(6, 12);
+    const frames = [
+      { transform: `translate(0px,0px) rotate(${deg}deg)${flip} scale(.15)`, opacity: 0 },
+      { transform: `translate(${dx * 0.45}px,${dy * 0.45}px) rotate(${deg + wig}deg)${flip} scale(1)`, opacity: 1, offset: 0.28 },
+      { transform: `translate(${dx * 0.8}px,${dy * 0.8 + 6}px) rotate(${deg - wig}deg)${flip} scale(.95)`, opacity: 1, offset: 0.62 },
+      { transform: `translate(${dx}px,${dy + 18}px) rotate(${deg}deg)${flip} scale(.7)`, opacity: 0 },
+    ];
+    el.animate(frames, { duration: rnd(780, 980), delay: i * 18, easing: ease, fill: "both" }).onfinish = () => el.remove();
   }
 }
 
@@ -173,7 +185,7 @@ export function checkoutSwim(onDone?: () => void, opts: any = {}) {
       });
     }
     const anim = el.animate(frames, {
-      duration: total, delay: i * 55, easing: "cubic-bezier(.4,0,.5,1)", fill: "forwards",
+      duration: total, delay: i * 55, easing: "cubic-bezier(.4,0,.5,1)", fill: "both",
     });
     anim.onfinish = () => el.remove();
   }
@@ -187,7 +199,7 @@ export function FishProvider() {
       const t = e.target as HTMLElement;
       if (t.closest("input, textarea, select, [contenteditable='true']")) return;
       if (e.clientX === 0 && e.clientY === 0) return; // keyboard-triggered clicks
-      spawnBurst(e.clientX, e.clientY, "auto", t.closest("[data-fish]") ? 5 : 3);
+      spawnBurst(e.clientX, e.clientY, "auto", t.closest("[data-fish]") ? 7 : 5);
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);

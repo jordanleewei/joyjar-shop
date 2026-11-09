@@ -996,3 +996,10 @@ html{ scroll-padding-top:90px; }
   .mcard-petname{ font-size:9px; }
 }
 .gift{ overflow:hidden; }
+
+/* ---------- Brand logo (from 小胶傲.ai) ---------- */
+.logo-horizontal{ display:block; height:52px; width:auto; }
+.logo-stacked-img{ display:block; height:110px; width:auto; }
+.logo-full{ height:auto; }
+@media (max-width:520px){ .logo-horizontal{ height:44px; } }
+.gift-copy .section-title em{ color:var(--cinnabar); }
