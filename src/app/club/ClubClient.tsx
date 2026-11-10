@@ -62,12 +62,12 @@ function JoinForm({ card, name, setName }: { card: CardDesign; name: string; set
       {mode === "join" && (
         <label className="field">
           <span className="field-label">Name on card <em>卡面名字</em></span>
-          <input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="Jane" required />
+          <input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="JoyJar" required />
         </label>
       )}
       <label className="field">
         <span className="field-label">Email <em>邮箱</em></span>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@email.com" autoComplete="email" required />
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="joyjar@email.com" autoComplete="email" required />
       </label>
       <label className="field">
         <span className="field-label">Password <em>密码</em></span>
