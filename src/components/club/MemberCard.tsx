@@ -130,6 +130,58 @@ export function FishMawPet({ colour = "gold", accessory = "none", size = 90, bou
       {accessory === "star" && (
         <path transform="translate(70 18) scale(.9)" d="M0,-10 L3,-3 L10,-3 L4,2 L6,9 L0,5 L-6,9 L-4,2 L-10,-3 L-3,-3 Z" fill="#bfa063" stroke="#8a6f33" strokeWidth="1" />
       )}
+      {accessory === "flower" && (
+        <g transform="translate(32 21)">
+          {[0, 72, 144, 216, 288].map((r) => <circle key={r} cx={5 * Math.cos(r * Math.PI / 180)} cy={5 * Math.sin(r * Math.PI / 180)} r="4" fill="#f4a3b7" stroke="#d6738c" strokeWidth=".8" />)}
+          <circle r="3" fill="#f2c45a" />
+        </g>
+      )}
+      {accessory === "cap" && (
+        <g>
+          <path d="M36,25 C36,10 66,8 68,24 Z" fill="#3b6fd8" stroke="#2c2823" strokeWidth="1.4" strokeLinejoin="round" />
+          <path d="M38,24 C30,24 22,26 20,29 C28,30 36,28 40,26 Z" fill="#2f59b0" stroke="#2c2823" strokeWidth="1.4" strokeLinejoin="round" />
+          <circle cx="52" cy="11" r="2" fill="#2f59b0" />
+        </g>
+      )}
+      {accessory === "glasses" && (
+        <g fill="rgba(255,255,255,.28)" stroke="#2c2823" strokeWidth="2">
+          <circle cx="40" cy="48" r="7.5" /><circle cx="58" cy="48" r="7.5" />
+          <path d="M47.5,47 Q49,45 50.5,47" fill="none" />
+          <path d="M65.5,47 L74,44" fill="none" />
+        </g>
+      )}
+      {accessory === "bowtie" && (
+        <g transform="translate(49 70)">
+          <path d="M0,0 L-10,-6 L-10,6 Z M0,0 L10,-6 L10,6 Z" fill="#b34a30" stroke="#2c2823" strokeWidth="1.2" strokeLinejoin="round" />
+          <circle r="2.6" fill="#8a2f1c" stroke="#2c2823" strokeWidth="1" />
+        </g>
+      )}
+      {accessory === "chef" && (
+        <g stroke="#2c2823" strokeWidth="1.3">
+          <rect x="40" y="16" width="22" height="9" rx="2" fill="#fff" />
+          <circle cx="43" cy="12" r="6" fill="#fff" /><circle cx="51" cy="8" r="7" fill="#fff" /><circle cx="59" cy="12" r="6" fill="#fff" />
+          <path d="M40,16 L62,16" stroke="#fff" strokeWidth="3" />
+        </g>
+      )}
+      {accessory === "headphones" && (
+        <g stroke="#2c2823" strokeWidth="1.4">
+          <path d="M28,42 C26,14 74,12 72,42" fill="none" stroke="#3a3140" strokeWidth="4" />
+          <rect x="22" y="38" width="9" height="14" rx="4" fill="#b34a30" />
+          <rect x="69" y="38" width="9" height="14" rx="4" fill="#b34a30" />
+        </g>
+      )}
+      {accessory === "tiara" && (
+        <g>
+          <path d="M36,23 L39,13 L44,19 L50,9 L56,19 L61,13 L64,23 Z" fill="#e8e8f0" stroke="#9aa0b8" strokeWidth="1.2" strokeLinejoin="round" />
+          <circle cx="50" cy="15" r="2.6" fill="#d48691" /><circle cx="42" cy="19" r="1.4" fill="#9cc3cf" /><circle cx="58" cy="19" r="1.4" fill="#9cc3cf" />
+        </g>
+      )}
+      {accessory === "halo" && (
+        <g>
+          <ellipse cx="50" cy="8" rx="17" ry="5" fill="none" stroke="#f2c45a" strokeWidth="6" opacity=".35" />
+          <ellipse cx="50" cy="8" rx="17" ry="5" fill="none" stroke="#e7c25a" strokeWidth="3" />
+        </g>
+      )}
       {accessory === "crown" && (
         <path d="M38,22 L40,8 L47,16 L52,4 L57,16 L64,8 L66,22 Z" fill="#e7c25a" stroke="#8a6f33" strokeWidth="1.4" strokeLinejoin="round" />
       )}

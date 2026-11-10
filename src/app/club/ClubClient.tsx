@@ -179,7 +179,7 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
             <h2 className="section-title">Say hi to <em>{card.petName}</em>.</h2>
             <p className="section-lede">Every member gets a little fish maw pet. Feed it, play with it, rename it, and dress it up. Accessories unlock as you move up from Pearl to Diamond.</p>
             <ul className="pond-perks">
-              <li><b>🎀 Bow</b> Pearl</li><li><b>🌿 Leaf</b> Jade</li><li><b>⭐ Star</b> Gold</li><li><b>👑 Crown</b> Diamond</li>
+              <li><b>Pearl</b> 🎀 🌸 🧢</li><li><b>Jade</b> 🌿 👓 🤵</li><li><b>Gold</b> ⭐ 👨‍🍳 🎧</li><li><b>Diamond</b> 👑 💎 😇</li>
             </ul>
           </div>
           <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={360} />

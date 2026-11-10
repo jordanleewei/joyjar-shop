@@ -11,17 +11,17 @@ export type Tier = {
 
 export const TIERS: Tier[] = [
   { id: "pearl",   en: "Pearl",   zh: "珍珠", min: 0,   discount: 0,
-    perks: ["5% welcome discount on your first order", "Your own member card & fish maw pet", "Earn 5% vouchers by completing missions"],
-    unlocks: ["none", "bow"] },
+    perks: ["5% welcome discount on your first order", "Your own member card & fish maw pet", "Earn 5% vouchers by completing missions", "Pet accessories: bow, flower, cap"],
+    unlocks: ["none", "bow", "flower", "cap"] },
   { id: "jade",    en: "Jade",    zh: "翡翠", min: 100, discount: 0.05,
-    perks: ["5% off every order", "Free delivery on every order", "Leaf accessory for your pet"],
-    unlocks: ["leaf"] },
+    perks: ["5% off every order", "Free delivery on every order", "Pet accessories: leaf, glasses, bow tie"],
+    unlocks: ["leaf", "glasses", "bowtie"] },
   { id: "gold",    en: "Gold",    zh: "黄金", min: 250, discount: 0.10,
-    perks: ["10% off every order", "Free delivery on every order", "Star accessory for your pet"],
-    unlocks: ["star"] },
+    perks: ["10% off every order", "Free delivery on every order", "Pet accessories: star, chef hat, headphones"],
+    unlocks: ["star", "chef", "headphones"] },
   { id: "diamond", en: "Diamond", zh: "钻石", min: 500, discount: 0.15,
-    perks: ["15% off every order", "Free delivery on every order", "Crown for your pet"],
-    unlocks: ["crown"] },
+    perks: ["15% off every order", "Free delivery on every order", "Pet accessories: crown, tiara, halo"],
+    unlocks: ["crown", "tiara", "halo"] },
 ];
 
 export const MAX_STACKED = 0.35;   // most a member can take off one order
@@ -91,8 +91,11 @@ export const PET_COLOURS = [
   { id: "green", fill: "#c4dca6", shade: "#88ad6a" },
 ];
 export const ACCESSORIES = [
-  { id: "none", en: "None" }, { id: "bow", en: "Bow" }, { id: "leaf", en: "Leaf" },
-  { id: "star", en: "Star" }, { id: "crown", en: "Crown" },
+  { id: "none", en: "None" },
+  { id: "bow", en: "🎀 Bow" }, { id: "flower", en: "🌸 Flower" }, { id: "cap", en: "🧢 Cap" },
+  { id: "leaf", en: "🌿 Leaf" }, { id: "glasses", en: "👓 Glasses" }, { id: "bowtie", en: "🤵 Bow tie" },
+  { id: "star", en: "⭐ Star" }, { id: "chef", en: "👨‍🍳 Chef hat" }, { id: "headphones", en: "🎧 Headphones" },
+  { id: "crown", en: "👑 Crown" }, { id: "tiara", en: "💎 Tiara" }, { id: "halo", en: "😇 Halo" },
 ];
 
 export type CardDesign = {

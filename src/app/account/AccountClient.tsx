@@ -142,7 +142,7 @@ export function AccountClient({ member, orders }: { member: any; orders: any[] }
             <div className="acct-split">
               <div>
                 <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={400} />
-                <p className="muted small" style={{ marginTop: 10 }}>{unlocked.length - 1} of 4 accessories unlocked · more unlock as you move up tiers</p>
+                <p className="muted small" style={{ marginTop: 10 }}>{unlocked.length - 1} of 12 accessories unlocked · more unlock as you move up tiers</p>
               </div>
               <div>
                 <Label zh="我的宠物">Your fish maw pet</Label>

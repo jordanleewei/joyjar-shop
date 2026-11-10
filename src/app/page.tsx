@@ -1,7 +1,7 @@
 import React from "react";
 import { prisma } from "@/lib/db";
 import { Header, Footer } from "@/components/layout/Shared";
-import { Hero, BundleCard, Benefits, GiftBlock } from "@/components/ui/ShopBlocks";
+import { Hero, BundleCard, Benefits } from "@/components/ui/ShopBlocks";
 import { Wave, Label } from "@/components/ui/components";
 import { Marquee, FlavourShowcase, Journey, PopSection, ClubTeaser, Faq } from "@/components/story/Story";
 
@@ -35,7 +35,6 @@ export default async function ShopScreen() {
       <PopSection />
       <Benefits />
       <ClubTeaser />
-      <GiftBlock bundles={bundles} />
       <Wave className="wave-sep" />
       <Faq />
       <Footer />
