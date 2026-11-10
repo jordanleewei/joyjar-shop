@@ -68,9 +68,9 @@ export async function memberSpend(memberId: string) {
 export async function currentMember() {
   const id = await sessionMemberId();
   if (!id) return null;
-  const m = await prisma.member.findUnique({ where: { id } });
+  // one round trip: member and their spend in parallel
+  const [m, spend] = await Promise.all([prisma.member.findUnique({ where: { id } }), memberSpend(id)]);
   if (!m) return null;
-  const spend = await memberSpend(m.id);
   const t = tierFor(spend);
   return {
     id: m.id, num: m.num, email: m.email, name: m.name, card: m.card,

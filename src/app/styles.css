@@ -1277,3 +1277,79 @@ html{ scroll-padding-top:90px; }
 .site-footer .footer-disclaimer{ color:#a9b59d; }
 .site-footer .footer-nav a:focus-visible{ outline:2px solid var(--ft-gold); outline-offset:3px; }
 .jingle-inline .jingle-bars{ margin-left:6px; }
+
+/* ---------- loading skeleton ---------- */
+.sk{ display:block; border-radius:10px; background:linear-gradient(90deg,var(--paper-2) 0%, #ece5d8 50%, var(--paper-2) 100%); background-size:200% 100%; animation:skShine 1.2s linear infinite; }
+.sk-title{ height:24px; width:45%; margin-bottom:18px; }
+.sk-line{ height:44px; margin-bottom:12px; }
+.sk-line.short{ width:60%; }
+.sk-btn{ height:52px; border-radius:999px; margin-top:16px; }
+@keyframes skShine{ to{ background-position:-200% 0; } }
+@media (prefers-reduced-motion: reduce){ .sk{ animation:none; } }
+
+/* ---------- Responsive polish (final audit) ---------- */
+/* .pdp used to wipe the side padding of .wrap, so product pages touched the screen edge on phones */
+.pdp{ padding-top:28px; padding-bottom:60px; padding-left:clamp(20px,5vw,56px); padding-right:clamp(20px,5vw,56px); }
+/* eyebrow labels: wrap as a unit instead of squeezing the Chinese into a column */
+.eyebrow{ flex-wrap:wrap; row-gap:4px; }
+.eyebrow-zh{ white-space:nowrap; }
+@media (max-width:520px){ .eyebrow-en{ white-space:normal; letter-spacing:.24em; } }
+/* grids must be allowed to shrink below their content width */
+.cart-grid,.ck-grid,.acct-split,.club-make-inner,.pond-section-inner,.journey-grid{ min-width:0; }
+.cart-grid > *,.ck-grid > *,.cart-line > *,.acct-split > *{ min-width:0; }
+@media (max-width:880px){
+  .cart-grid,.ck-grid{ grid-template-columns:minmax(0,1fr); }
+  .cart-line{ grid-template-columns:64px minmax(0,1fr); }
+  .cart-line-foot{ flex-wrap:wrap; gap:8px; }
+}
+/* checkout steps stay on one line on small phones */
+@media (max-width:520px){
+  .ck-steps{ gap:6px; flex-wrap:nowrap; }
+  .ck-step{ padding:6px 10px; font-size:10.5px; letter-spacing:.1em; white-space:nowrap; }
+  .club-hero-card{ display:none; }            /* the sticky live preview shows the card on phones */
+  .flav-body .flavor-cta,.jingle-inline,.link-quiet,.back-link,.remove,.perk-act{ min-height:40px; display:inline-flex; align-items:center; }
+  .footer-nav a{ padding:10px 6px; }
+  .chip.is-locked small{ font-size:11.5px; }
+}
+.footer-nav{ gap:2px 16px; }
+.chip.is-locked small{ font-size:11.5px; }
+
+/* ---------- Checkout clarity ---------- */
+.ck-intro{ font-size:14px; color:var(--ink-soft); margin:0 0 4px; }
+.req{ color:var(--cinnabar); font-weight:700; margin-left:3px; }
+.opt{ font-style:normal; font-size:11px; color:var(--ink-faint); margin-left:6px; letter-spacing:.04em; }
+.ck-num{ display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; margin-right:10px; font-family:var(--font-body); font-size:14px; font-weight:700; background:var(--paper-2); color:var(--ink-soft); border:1.5px solid var(--hair-strong); vertical-align:middle; }
+.ck-num.is-done{ background:#3f6b3a; border-color:#3f6b3a; color:#fff; }
+.field.is-error input{ border-color:var(--cinnabar); background:#fdf3ef; box-shadow:0 0 0 3px rgba(179,74,48,.12); }
+.field.is-ok input{ border-color:#9bb68a; }
+.field-err{ font-size:12.5px; color:var(--cinnabar); font-weight:600; }
+.review{ border:1px solid var(--hair); border-radius:14px; background:var(--bg); padding:4px 14px; margin:4px 0 10px; }
+.review-sec{ padding:10px 0; border-bottom:1px dashed var(--hair-strong); }
+.review-sec:last-child{ border-bottom:none; }
+.review-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.review-head strong{ font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); }
+.review-edit{ background:none; border:none; color:var(--cinnabar); font-size:12.5px; font-weight:600; padding:6px 0 6px 10px; }
+.review p{ margin:2px 0; font-size:14px; color:var(--ink); overflow-wrap:anywhere; }
+.review .review-missing{ color:var(--cinnabar); font-weight:600; }
+.review .review-missing::before{ content:"! "; }
+.review-note{ font-style:italic; color:var(--ink-soft) !important; }
+.todo{ border:1.5px solid var(--cinnabar); background:#fdf3ef; border-radius:12px; padding:12px 14px; margin:6px 0 10px; font-size:14px; }
+.todo ul{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.todo button{ background:#fff; border:1px solid rgba(179,74,48,.4); color:var(--cinnabar); border-radius:999px; padding:7px 12px; font-size:13px; font-weight:600; min-height:36px; }
+.btn.is-incomplete{ background:var(--paper-2); color:var(--ink); border:1.5px dashed var(--cinnabar); box-shadow:none; }
+.pay-hint{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin:8px 0 0; }
+@media (max-width:520px){ .ck-step{ font-size:11px; } }
+/* the summary grew (review block); keep the whole card reachable while it sticks */
+@media (min-width:881px){ .summary-sticky{ top:96px; max-height:calc(100vh - 116px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; } }
+
+/* ---------- Checkout: gentler tone ---------- */
+.field.is-error input{ border-color:#d9a75b; background:#fffaf0; box-shadow:0 0 0 3px rgba(217,167,91,.18); }
+.field-err{ color:#9a6b1f; font-weight:500; }
+.field.is-ok input{ border-color:#b9cba9; }
+.review .review-empty{ color:var(--ink-faint); font-style:italic; }
+.todo{ border:1px solid #e3d3ad; background:#fbf5e6; color:var(--ink); }
+.todo strong{ font-weight:600; }
+.todo button{ background:#fff; border:1px solid #d9c38f; color:var(--green, #2f4a34); font-weight:500; }
+.todo button:hover{ border-color:var(--gold); }
+.btn.is-incomplete{ background:var(--green, #2f4a34); color:#fbf6ea; border:1px solid transparent; box-shadow:0 14px 28px -18px rgba(40,70,45,.7); }
+.ck-num{ background:var(--paper-2); }

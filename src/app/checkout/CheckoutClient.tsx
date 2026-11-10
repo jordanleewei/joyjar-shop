@@ -14,15 +14,37 @@ import Link from "next/link";
 import { TIERS, stackDiscounts, DiscountOptions } from "@/lib/club";
 
 
-function Field({ label, zh, value, onChange, placeholder, type = "text", wide }: any) {
+function Field({ id, label, zh, value, onChange, onBlur, placeholder, type = "text", wide, required, optional, error, inputMode, autoComplete }: any) {
   return (
-    <label className={`field ${wide ? "field-wide" : ""}`}>
-      <span className="field-label">{label} <em>{zh}</em></span>
-      <input type={type} value={value} placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)} />
+    <label className={`field ${wide ? "field-wide" : ""} ${error ? "is-error" : ""} ${value && !error ? "is-ok" : ""}`} htmlFor={id}>
+      <span className="field-label">
+        {label} <em>{zh}</em>
+        {optional && <i className="opt">optional</i>}
+      </span>
+      <input id={id} type={type} value={value} placeholder={placeholder} inputMode={inputMode} autoComplete={autoComplete}
+        aria-required={required || undefined} aria-invalid={!!error || undefined} aria-describedby={error ? `${id}-err` : undefined}
+        onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
+      {error && <span className="field-err" id={`${id}-err`}>{error}</span>}
     </label>
   );
 }
+
+// What's still needed before paying (shown inline and in the summary)
+function validate(form: any, isPickup: boolean) {
+  const e: Record<string, string> = {};
+  const digits = (form.phone || "").replace(/\D/g, "");
+  if (!form.name.trim()) e.name = "Add your name so we know who it's for.";
+  if (!digits) e.phone = "Add a phone number so we can WhatsApp you about delivery.";
+  else if (digits.length < 8) e.phone = "Looks like a digit or two is missing.";
+  if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Just double-check this email.";
+  if (!isPickup) {
+    if (!form.addr.trim()) e.addr = "Add your street and block number.";
+    if (!/^\d{6}$/.test((form.postal || "").trim())) e.postal = form.postal.trim() ? "Singapore postal codes have 6 digits." : "Add your 6-digit postal code.";
+  }
+  return e;
+}
+const FIELD_LABEL: Record<string, string> = { name: "Full name", phone: "Phone", email: "Email", addr: "Address", postal: "Postal code" };
+const FIELD_ORDER = ["name", "phone", "email", "addr", "postal"];
 
 /* ── helpers for dynamic date generation ── */
 const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -69,6 +91,8 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showAll, setShowAll] = useState(false);
   // which member discounts to use (all on by default; the server re-checks and caps at 35%)
   const [useDisc, setUseDisc] = useState<{ tier: boolean; welcome: boolean; vouchers: string[] }>(() => ({
     tier: true, welcome: true, vouchers: (member?.discounts?.vouchers || []).map((v: any) => v.id),
@@ -95,7 +119,24 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
   if (!mounted) return null;
 
   const set = (k: string) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const ready = form.name && form.phone && (isPickup || form.addr);
+  const errors = validate(form, isPickup);
+  const missing = FIELD_ORDER.filter((k) => errors[k]);
+  const ready = missing.length === 0;
+  const err = (k: string) => (showAll || touched[k] ? errors[k] : undefined);
+  const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
+  const contactDone = !errors.name && !errors.phone && !errors.email;
+  const deliveryDone = isPickup || (!errors.addr && !errors.postal);
+  const goTo = (k: string) => {
+    const el = document.getElementById(`f-${k}`) as HTMLInputElement | null;
+    if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => el.focus({ preventScroll: true }), 350); }
+  };
+  const goSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const onPay = () => {
+    if (!ready) { setShowAll(true); goTo(missing[0]); return; }
+    placeOrder();
+  };
+  const dateObj = dateOptions.find((d) => d.key === selectedDate);
+  const timeObj = TIME_SLOTS.find((ts) => ts.id === selectedTime);
 
   const placeOrder = async () => {
     setIsProcessing(true);
@@ -150,7 +191,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
       <div className="hitpay-info">
         <div className="stripe-badge" style={{marginBottom: "16px"}}>Secured by <strong>HitPay</strong></div>
         <p style={{marginBottom: "8px", fontSize: "0.95rem"}}>You will be safely redirected to HitPay to complete your {pay === "paynow" ? "PayNow" : "Credit Card"} payment.</p>
-        <p style={{color: "var(--fg-muted)", fontSize: "0.85rem"}}>UEN · 小胶傲 JoyJar Pte Ltd · 20260613A</p>
+        <p style={{color: "var(--fg-muted)", fontSize: "0.85rem"}}>UEN · 小胶傲 JoyJar · 53532057D</p>
       </div>
     </div>
   );
@@ -163,17 +204,18 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
         {Steps}
         <div className="ck-grid ck-two-col">
           <div className="ck-forms">
-            <section className="ck-block">
-              <h3 className="ck-h">Contact · 联系</h3>
+            <p className="ck-intro">Just a few details and your jars are on their way. Your summary on the right updates as you go, so you can check everything before paying.</p>
+            <section className="ck-block" id="ck-contact">
+              <h3 className="ck-h"><span className={`ck-num ${contactDone ? "is-done" : ""}`}>{contactDone ? "✓" : "1"}</span>Contact · 联系</h3>
               <div className="field-grid">
-                <Field label="Full name" zh="姓名" value={form.name} onChange={set("name")} placeholder="JoyJar" />
-                <Field label="Phone" zh="电话" value={form.phone} onChange={set("phone")} placeholder="+65 ····" />
-                <Field label="Email" zh="邮箱" value={form.email} onChange={set("email")} placeholder="joyjar@email.com" type="email" wide />
+                <Field id="f-name" label="Full name" zh="姓名" value={form.name} onChange={set("name")} onBlur={blur("name")} placeholder="JoyJar" required error={err("name")} autoComplete="name" />
+                <Field id="f-phone" label="Phone" zh="电话" value={form.phone} onChange={set("phone")} onBlur={blur("phone")} placeholder="+65 8123 4567" type="tel" inputMode="tel" required error={err("phone")} autoComplete="tel" />
+                <Field id="f-email" label="Email" zh="邮箱" value={form.email} onChange={set("email")} onBlur={blur("email")} placeholder="joyjar@email.com" type="email" wide optional error={err("email")} autoComplete="email" />
               </div>
             </section>
 
-            <section className="ck-block">
-              <h3 className="ck-h">Delivery · 配送</h3>
+            <section className="ck-block" id="ck-delivery">
+              <h3 className="ck-h"><span className={`ck-num ${deliveryDone ? "is-done" : ""}`}>{deliveryDone ? "✓" : "2"}</span>Delivery · 配送</h3>
 
               {/* ── Delivery mode toggle ── */}
               <span className="opt-label">Method · 方式</span>
@@ -212,9 +254,9 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               ) : (
                 <>
                   <div className="field-grid">
-                    <Field label="Address" zh="地址" value={form.addr} onChange={set("addr")} placeholder="Street & block" wide />
-                    <Field label="Unit" zh="单位" value={form.unit} onChange={set("unit")} placeholder="#12-34" />
-                    <Field label="Postal" zh="邮编" value={form.postal} onChange={set("postal")} placeholder="123456" />
+                    <Field id="f-addr" label="Address" zh="地址" value={form.addr} onChange={set("addr")} onBlur={blur("addr")} placeholder="Block 123, Joy Street 4" wide required error={err("addr")} autoComplete="street-address" />
+                    <Field id="f-unit" label="Unit" zh="单位" value={form.unit} onChange={set("unit")} placeholder="#12-34" optional />
+                    <Field id="f-postal" label="Postal code" zh="邮编" value={form.postal} onChange={set("postal")} onBlur={blur("postal")} placeholder="123456" inputMode="numeric" required error={err("postal")} autoComplete="postal-code" />
                   </div>
                   {zones.length > 0 && (
                     <React.Fragment>
@@ -281,11 +323,11 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
                 ))}
               </div>
 
-              <Field label={isPickup ? "Note" : "Note for delivery"} zh="备注" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide />
+              <Field id="f-note" label={isPickup ? "Note" : "Note for delivery"} zh="备注" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide optional />
             </section>
 
-            <section className="ck-block">
-              <h3 className="ck-h">Payment · 付款</h3>
+            <section className="ck-block" id="ck-payment">
+              <h3 className="ck-h"><span className="ck-num is-done">✓</span>Payment · 付款</h3>
               <div className="pay-tabs">
                 <button data-nofish="1" className={`pay-tab ${pay === "paynow" ? "is-on" : ""}`} onClick={() => setPay("paynow")}>PayNow</button>
                 <button data-nofish="1" className={`pay-tab ${pay === "card" ? "is-on" : ""}`} onClick={() => setPay("card")}>Card 信用卡</button>
@@ -317,6 +359,31 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
                   </div>
                 );
               })}
+            </div>
+            <div className="review">
+              <div className="review-sec">
+                <div className="review-head"><strong>Contact · 联系</strong><button type="button" className="review-edit" data-nofish="1" onClick={() => goSection("ck-contact")}>Edit</button></div>
+                <p className={form.name.trim() ? "" : "review-empty"}>{form.name.trim() || "Your name"}</p>
+                <p className={errors.phone ? "review-empty" : ""}>{form.phone.trim() || "Your phone number"}</p>
+                {form.email.trim() && <p>{form.email}</p>}
+              </div>
+              <div className="review-sec">
+                <div className="review-head"><strong>{isPickup ? "Self pick-up · 自取" : "Deliver to · 配送"}</strong><button type="button" className="review-edit" data-nofish="1" onClick={() => goSection("ck-delivery")}>Edit</button></div>
+                {isPickup ? (
+                  <p>JoyJar Studio (we&apos;ll WhatsApp you the address)</p>
+                ) : (
+                  <>
+                    <p className={errors.addr ? "review-empty" : ""}>{form.addr.trim() ? `${form.addr.trim()}${form.unit.trim() ? `, ${form.unit.trim()}` : ""}` : "Your address"}</p>
+                    <p className={errors.postal ? "review-empty" : ""}>{form.postal.trim() ? `Singapore ${form.postal.trim()}` : "Postal code"}{zone ? ` · ${zone.name}` : ""}</p>
+                  </>
+                )}
+                <p>{dateObj ? dateObj.label : ""} · {timeObj ? `${timeObj.label} ${timeObj.time}` : ""}</p>
+                {form.note.trim() && <p className="review-note">“{form.note.trim()}”</p>}
+              </div>
+              <div className="review-sec">
+                <div className="review-head"><strong>Payment · 付款</strong><button type="button" className="review-edit" data-nofish="1" onClick={() => goSection("ck-payment")}>Edit</button></div>
+                <p>{pay === "paynow" ? "PayNow" : "Card"} via HitPay</p>
+              </div>
             </div>
             <div className="summary-row"><span>Subtotal 小计</span><span>{priceStr(sub)}</span></div>
             <div className="summary-row">
@@ -358,9 +425,20 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
             )}
             <div className="summary-row total"><span>Total 总计</span><span>{priceStr(total)}</span></div>
             {error && <p className="form-err" role="alert">{error}</p>}
-            <Btn disabled={!ready || isProcessing || cart.length === 0} onClick={() => ready && placeOrder()}>
-              {isProcessing ? "Redirecting..." : `Pay ${priceStr(total)} · 付款`}
+            {!ready && (
+              <div className="todo" role="status">
+                <strong>Almost ready ✨ just add:</strong>
+                <ul>
+                  {missing.map((k) => (
+                    <li key={k}><button type="button" data-nofish="1" onClick={() => { setShowAll(true); goTo(k); }}>{FIELD_LABEL[k]}</button></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <Btn className={!ready ? "is-incomplete" : ""} disabled={isProcessing || cart.length === 0} onClick={onPay} aria-describedby={!ready ? "pay-hint" : undefined}>
+              {isProcessing ? "Redirecting..." : ready ? `Pay ${priceStr(total)} · 付款` : `Continue · 继续`}
             </Btn>
+            {!ready && <p className="pay-hint" id="pay-hint">We&apos;ll take you to anything still to fill in.</p>}
             {!member && (
               <p className="summary-hint member-hint">
                 <Link href="/club" data-nofish="1">Join the JoyJar Club</Link> free: 5% off your first order, plus up to 35% off with tiers and missions.

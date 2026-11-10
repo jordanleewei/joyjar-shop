@@ -68,6 +68,7 @@ export function CartClient({ products, bundles, deliveryConfig }: any) {
   useEffect(() => {
     prune(products.map((p: any) => p.id), bundles.map((b: any) => b.id));
     setMounted(true);
+    router.prefetch("/checkout"); // warm up checkout so the button feels instant
   }, []);
 
   if (!mounted) return null;

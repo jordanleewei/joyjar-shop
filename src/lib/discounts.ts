@@ -27,8 +27,10 @@ export async function availableVouchers(memberId: string) {
 
 export async function discountOptions(member: { id: string; spend: number }): Promise<DiscountOptions> {
   const t = tierFor(member.spend);
-  const paidCount = await prisma.order.count({ where: { memberId: member.id, status: "paid" } });
-  const vouchers = await availableVouchers(member.id);
+  const [paidCount, vouchers] = await Promise.all([
+    prisma.order.count({ where: { memberId: member.id, status: "paid" } }),
+    availableVouchers(member.id),
+  ]);
   const label = (m: string) => MISSIONS.find((x) => x.id === m)?.en || "Mission";
   return {
     tier: t.tier.discount ? { rate: t.tier.discount, label: `${t.tier.en} member` } : null,
