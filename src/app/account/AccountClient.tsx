@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components/layout/Shared";
@@ -41,7 +41,21 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
     window.addEventListener("hashchange", fromHash);
     return () => window.removeEventListener("hashchange", fromHash);
   }, []);
-  const go = (t: Tab) => { setTab(t); history.replaceState(null, "", `#${t}`); };
+  const tabsAnchor = useRef<HTMLDivElement>(null);
+  const tabsNav = useRef<HTMLElement>(null);
+  const go = (t: Tab) => {
+    setTab(t);
+    history.replaceState(null, "", `#${t}`);
+    // bring the new section into view: tabs sit at their sticky spot, content right below
+    const a = tabsAnchor.current, n = tabsNav.current;
+    if (!a || !n) return;
+    const stickyTop = parseFloat(getComputedStyle(n).top) || 0;
+    const y = a.getBoundingClientRect().top + window.scrollY - stickyTop;
+    if (Math.abs(window.scrollY - y) > 4) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: y, behavior: reduce ? "auto" : "smooth" });
+    }
+  };
 
   const t = tierFor(member.spend);
   const dirty = JSON.stringify([card, name]) !== savedCard;
@@ -100,7 +114,8 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
       </section>
 
       {/* tabs */}
-      <nav className="acct-tabs" aria-label="Account sections">
+      <div ref={tabsAnchor} aria-hidden="true" />
+      <nav ref={tabsNav} className="acct-tabs" aria-label="Account sections">
         <div className="wrap acct-tabs-inner">
           {TABS.map((x) => (
             <button key={x.id} type="button" data-nofish="1" className={`acct-tab ${tab === x.id ? "is-on" : ""}`} onClick={() => go(x.id)}>
