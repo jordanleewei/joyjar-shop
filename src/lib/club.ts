@@ -66,7 +66,7 @@ export function unlockedAccessories(tierIndex: number) {
 // ---- card design ----
 export const SKIN = ["#f6d7bd", "#eec39f", "#d9a37c", "#b67a55", "#8a5638"];
 export const HAIR_COLOURS = ["#2c2420", "#5a3a26", "#9a6a3c", "#c9a36a", "#b34a30"];
-export const LOOKS = [{ id: "f", en: "Her", zh: "她" }, { id: "m", en: "Him", zh: "他" }, { id: "t", en: "They", zh: "TA" }];
+export const LOOKS = [{ id: "f", en: "Her", zh: "她" }, { id: "m", en: "Him", zh: "他" }, { id: "t", en: "They", zh: "中性" }];
 // looks: which avatar looks offer the style ("They" can pick any style except NOT_THEY)
 export const HAIR_STYLES = [
   { id: "bob", en: "Bob", looks: ["f"] }, { id: "curly", en: "Curly", looks: ["f"] }, { id: "bun", en: "Bun", looks: ["f"] },
