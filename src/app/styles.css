@@ -1177,3 +1177,29 @@ html{ scroll-padding-top:90px; }
 .disc-row b{ color:var(--cinnabar); }
 .disc-row.is-over span{ color:var(--ink-faint); }
 .disc-note{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+
+/* ---------- Header & footer: deep ink bands with cinnabar/gold accents ---------- */
+:root{ --band:#2a2521; --band-2:#352e29; --band-ink:#f6efe2; --band-soft:#cfc5b5; --band-faint:#9c9284; --band-line:rgba(246,239,226,.16); }
+.site-header{ background:color-mix(in srgb,var(--band) 96%, transparent); border-bottom:3px solid var(--cinnabar); color:var(--band-ink); }
+.site-header .nav-link{ color:var(--band-ink); }
+.site-header .nav-zh{ color:var(--band-faint); }
+.site-header .nav-link:hover,.site-header .nav-link.is-on{ color:#f0b49f; background:rgba(246,239,226,.08); }
+.site-header .nav-link.is-on .nav-zh,.site-header .nav-link:hover .nav-zh{ color:#e3c27a; }
+.site-header .member-btn,.site-header .cart-btn{ color:var(--band-ink); border-color:rgba(246,239,226,.35); }
+.site-header .member-btn:hover,.site-header .cart-btn:hover{ border-color:#e3c27a; color:#e3c27a; }
+.site-header .member-btn.is-member{ border-color:#e3c27a; }
+.site-header .cart-zh{ color:var(--band-soft); }
+@media (max-width:1020px){
+  .site-header .nav-pill{ background:transparent; color:var(--band-ink); border-color:rgba(246,239,226,.3); }
+  .site-header .nav-pill.is-on{ background:var(--cinnabar); border-color:var(--cinnabar); color:#fff; }
+}
+.site-footer{ background:var(--band); color:var(--band-ink); border-top:3px solid var(--cinnabar); padding:56px 0 64px; position:relative; }
+.site-footer::before{ content:""; position:absolute; left:0; right:0; top:10px; height:14px; opacity:.35;
+  background:radial-gradient(circle at 10px -2px, transparent 9px, #e3c27a 10px, transparent 11px) repeat-x; background-size:20px 14px; }
+.site-footer .footer-zh{ color:#e3c27a; }
+.site-footer .footer-nav a{ color:var(--band-ink); }
+.site-footer .footer-nav a:hover{ color:#f0b49f; }
+.site-footer .footer-fine{ color:var(--band-soft); }
+.site-footer .footer-disclaimer{ color:var(--band-faint); }
+/* keep the floating song button readable over the dark footer */
+.jingle{ box-shadow:4px 5px 0 var(--ink), 0 0 0 1px rgba(246,239,226,.25), 0 18px 30px -18px rgba(0,0,0,.6); }
