@@ -14,10 +14,10 @@ export const TIERS: Tier[] = [
     perks: ["5% welcome discount on your first order", "Your own member card & fish maw pet", "Earn 5% vouchers by completing missions", "Pet accessories: bow, flower, cap"],
     unlocks: ["none", "bow", "flower", "cap"] },
   { id: "jade",    en: "Jade",    zh: "翡翠", min: 100, discount: 0.05,
-    perks: ["5% off every order", "Free delivery on every order", "Pet accessories: leaf, glasses, bow tie"],
+    perks: ["5% off every order", "Pet accessories: leaf, glasses, bow tie"],
     unlocks: ["leaf", "glasses", "bowtie"] },
   { id: "gold",    en: "Gold",    zh: "黄金", min: 250, discount: 0.10,
-    perks: ["10% off every order", "Free delivery on every order", "Pet accessories: star, chef hat, headphones"],
+    perks: ["10% off every order", "Pet accessories: star, chef hat, headphones"],
     unlocks: ["star", "chef", "headphones"] },
   { id: "diamond", en: "Diamond", zh: "钻石", min: 500, discount: 0.15,
     perks: ["15% off every order", "Free delivery on every order", "Pet accessories: crown, tiara, halo"],
@@ -27,7 +27,7 @@ export const TIERS: Tier[] = [
 export const MAX_STACKED = 0.35;   // most a member can take off one order
 export const WELCOME_RATE = 0.05;  // first order as a member
 export const VOUCHER_RATE = 0.05;  // per approved mission
-export const FREE_DELIVERY_FROM_TIER = 1; // Jade and up
+export const FREE_DELIVERY_FROM_TIER = 3; // Diamond only
 
 export type Mission = {
   id: string; en: string; zh: string; platform: string; how: string;
