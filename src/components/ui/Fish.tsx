@@ -81,9 +81,8 @@ function makeFishEl(kind: "koi" | "blue", size: number) {
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pickKind = () => (Math.random() < 0.5 ? "koi" : "blue");
 
-// Button press: a few fish swirl out of the button. Each takes a gentle, slightly
-// different curve (own turn amount, direction, speed and a small wobble), so it reads
-// as a loose little school rather than a tight spiral.
+// Button press: a few fish swim out of the button along smooth, gently curving
+// paths — a quick push off, then a glide — like koi turning away in a pond.
 export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
   if (typeof window === "undefined") return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -91,7 +90,6 @@ export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
   if (!layer) return;
 
   const mainDir = Math.random() < 0.5 ? 1 : -1;
-  const start = rnd(0, Math.PI * 2);
   for (let i = 0; i < count; i++) {
     const kind = pickKind();
     const size = rnd(38, 50);
@@ -101,38 +99,46 @@ export function spawnBurst(x: number, y: number, _motion = "auto", count = 4) {
     el.style.top = (y - h / 2) + "px";
     layer.appendChild(el);
 
-    const dir = Math.random() < 0.75 ? mainDir : -mainDir;   // mostly one way, the odd one turns back
-    const a0 = start + (Math.PI * 2 / count) * i + rnd(-0.5, 0.5);
-    const turn = rnd(0.28, 0.5) * Math.PI * 2;                 // under half a turn: swirly, not dizzy
-    const rMax = rnd(55, 85);
-    const wob = rnd(2, 5), wobF = rnd(2, 3.5), wobP = rnd(0, Math.PI * 2);
-    const N = 28;
-    const pts: { x: number; y: number }[] = [];
-    for (let k = 0; k <= N; k++) {
-      const t = k / N;
-      const r = 6 + rMax * Math.pow(t, 0.8) + Math.sin(t * Math.PI * 2 * wobF + wobP) * wob * t;
-      const a = a0 + dir * turn * t;
-      pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+    // Alternate left/right so the school spreads out; keep headings near horizontal
+    // so a side-view fish never has to flip over mid-swim.
+    const goLeft = i % 2 === 1;
+    const tilt = rnd(-0.6, 0.6);                                   // up/down angle off horizontal
+    const h0 = (goLeft ? Math.PI : 0) + tilt;
+    // bend back toward level if already tilted, otherwise drift with the school
+    const bend = tilt > 0.2 ? -1 : tilt < -0.2 ? 1 : mainDir * (goLeft ? -1 : 1);
+    const curve = rnd(0.3, 0.55) * bend;                           // total turn, radians
+    const dist = rnd(60, 90);
+
+    // integrate a constant-curvature arc
+    const N = 24;
+    let px = 0, py = 0;
+    const pts: { x: number; y: number; a: number }[] = [{ x: 0, y: 0, a: h0 }];
+    for (let k = 1; k <= N; k++) {
+      const a = h0 + curve * (k / N);
+      px += Math.cos(a) * (dist / N);
+      py += Math.sin(a) * (dist / N);
+      pts.push({ x: px, y: py, a });
     }
+    const flip = goLeft ? " scaleY(-1)" : "";
     const frames: Keyframe[] = pts.map((pt, k) => {
-      const nx = pts[Math.min(N, k + 1)], px = pts[Math.max(0, k - 1)];
-      const ang = Math.atan2(nx.y - px.y, nx.x - px.x) * 180 / Math.PI;
-      const flip = Math.cos(ang * Math.PI / 180) < 0 ? " scaleY(-1)" : ""; // stay belly-down
       const t = k / N;
-      const sc = t < 0.15 ? 0.5 + (t / 0.15) * 0.5 : 1 - Math.max(0, t - 0.75) * 0.6;
       return {
-        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${ang.toFixed(1)}deg)${flip} scale(${sc.toFixed(2)})`,
-        opacity: t < 0.08 ? t / 0.08 : t > 0.75 ? Math.max(0, (1 - t) / 0.25) : 1,
+        transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px) rotate(${(pt.a * 180 / Math.PI).toFixed(1)}deg)${flip} scale(${(t < 0.15 ? 0.6 + t / 0.15 * 0.4 : 1).toFixed(2)})`,
+        opacity: t < 0.1 ? t / 0.1 : t > 0.7 ? Math.max(0, (1 - t) / 0.3) : 1,
         offset: t,
       };
     });
-    el.animate(frames, { duration: rnd(1400, 1800), delay: i * rnd(30, 70), easing: "cubic-bezier(.25,.6,.35,1)", fill: "both" }).onfinish = () => el.remove();
-    // tail swish so it reads as swimming
+    // ease-out over the whole path: push off quickly, then glide to a stop
+    el.animate(frames, { duration: rnd(1300, 1650), delay: i * rnd(40, 90), easing: "cubic-bezier(.22,.7,.3,1)", fill: "both" }).onfinish = () => el.remove();
+
+    // soft tail beat: small, and it eases off as the fish glides
     const svg = el.firstElementChild as HTMLElement | null;
     if (svg) {
-      svg.style.transformOrigin = "78% 50%";
-      svg.animate([{ transform: "rotate(-8deg)" }, { transform: "rotate(8deg)" }],
-        { duration: rnd(170, 220), iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
+      svg.style.transformOrigin = "75% 50%";
+      svg.animate([
+        { transform: "rotate(0deg)" }, { transform: "rotate(-5deg)" }, { transform: "rotate(4deg)" },
+        { transform: "rotate(-3deg)" }, { transform: "rotate(2deg)" }, { transform: "rotate(-1deg)" }, { transform: "rotate(0deg)" },
+      ], { duration: 1300, easing: "ease-out", fill: "forwards" });
     }
   }
 }
