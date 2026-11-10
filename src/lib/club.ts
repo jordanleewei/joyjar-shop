@@ -10,15 +10,45 @@ export type Tier = {
 };
 
 export const TIERS: Tier[] = [
-  { id: "fresh",  en: "Fresh Jar",  zh: "鲜罐", min: 0,   discount: 0,
-    perks: ["Your own member card", "A fish maw pet to name", "Member-only news"], unlocks: ["none", "bow"] },
-  { id: "bouncy", en: "Bouncy Jar", zh: "弹罐", min: 100, discount: 0.05,
-    perks: ["5% off every order", "Leaf accessory for your pet"], unlocks: ["leaf"] },
-  { id: "proud",  en: "Proud Jar",  zh: "傲罐", min: 250, discount: 0.10,
-    perks: ["10% off every order", "Star accessory for your pet"], unlocks: ["star"] },
-  { id: "golden", en: "Golden Jar", zh: "金罐", min: 500, discount: 0.15,
-    perks: ["15% off every order", "Crown for your pet"], unlocks: ["crown"] },
+  { id: "pearl",   en: "Pearl",   zh: "珍珠", min: 0,   discount: 0,
+    perks: ["5% welcome discount on your first order", "Your own member card & fish maw pet", "Earn 5% vouchers by completing missions"],
+    unlocks: ["none", "bow"] },
+  { id: "jade",    en: "Jade",    zh: "翡翠", min: 100, discount: 0.05,
+    perks: ["5% off every order", "Free delivery on every order", "Leaf accessory for your pet"],
+    unlocks: ["leaf"] },
+  { id: "gold",    en: "Gold",    zh: "黄金", min: 250, discount: 0.10,
+    perks: ["10% off every order", "Free delivery on every order", "Star accessory for your pet"],
+    unlocks: ["star"] },
+  { id: "diamond", en: "Diamond", zh: "钻石", min: 500, discount: 0.15,
+    perks: ["15% off every order", "Free delivery on every order", "Crown for your pet"],
+    unlocks: ["crown"] },
 ];
+
+export const MAX_STACKED = 0.35;   // most a member can take off one order
+export const WELCOME_RATE = 0.05;  // first order as a member
+export const VOUCHER_RATE = 0.05;  // per approved mission
+export const FREE_DELIVERY_FROM_TIER = 1; // Jade and up
+
+export type Mission = {
+  id: string; en: string; zh: string; platform: string; how: string;
+  repeat: false | { max: number; days: number };
+};
+export const MISSIONS: Mission[] = [
+  { id: "ig_story", en: "Instagram Story", zh: "IG 快拍", platform: "Instagram",
+    how: "Share an Instagram Story with your JoyJar and tag or mention JoyJar.", repeat: false },
+  { id: "ig_post", en: "Instagram post", zh: "IG 贴文", platform: "Instagram",
+    how: "Post a photo or reel of your JoyJar on your Instagram feed and tag JoyJar.", repeat: false },
+  { id: "facebook", en: "Facebook post", zh: "脸书贴文", platform: "Facebook",
+    how: "Post about JoyJar on Facebook with a photo of your jar.", repeat: false },
+  { id: "tiktok", en: "TikTok video", zh: "抖音视频", platform: "TikTok",
+    how: "Post a TikTok featuring JoyJar (an unboxing, a taste test, the POP!).", repeat: false },
+  { id: "xhs", en: "Xiaohongshu note", zh: "小红书笔记", platform: "Xiaohongshu",
+    how: "Share a 小红书 note recommending JoyJar.", repeat: false },
+  { id: "refer", en: "Recommend a friend", zh: "推荐好友", platform: "Chat",
+    how: "Recommend JoyJar to a friend in a chat (WhatsApp, Telegram, WeChat…) and upload a screenshot of the message.",
+    repeat: { max: 3, days: 30 } },
+];
+
 
 export function tierFor(spend: number) {
   let idx = 0;
@@ -104,3 +134,31 @@ export function cleanCard(input: any): CardDesign {
 export function memberNo(num: number) {
   return "JJ-" + String(num).padStart(6, "0");
 }
+
+// ---- member discounts (shared by checkout page and server) ----
+export type DiscountOptions = {
+  tier: { rate: number; label: string } | null;
+  welcome: { rate: number; label: string } | null;
+  vouchers: { id: string; rate: number; label: string }[];
+  freeDelivery: boolean;
+  cap: number;
+};
+
+export type DiscountChoice = { tier?: boolean; welcome?: boolean; vouchers?: string[] };
+
+// Pure: same maths on the client (preview) and server (truth). Applies tier, then
+// welcome, then vouchers until the cap; vouchers that wouldn't fit aren't used.
+export function stackDiscounts(opts: DiscountOptions, choice: DiscountChoice) {
+  const parts: { kind: string; label: string; rate: number; id?: string }[] = [];
+  let rate = 0;
+  const add = (p: { kind: string; label: string; rate: number; id?: string }) => {
+    if (rate + p.rate > opts.cap + 1e-9) return false;
+    parts.push(p); rate += p.rate; return true;
+  };
+  if (choice.tier && opts.tier) add({ kind: "tier", ...opts.tier });
+  if (choice.welcome && opts.welcome) add({ kind: "welcome", ...opts.welcome });
+  const wanted = new Set(choice.vouchers || []);
+  for (const v of opts.vouchers) if (wanted.has(v.id)) add({ kind: "voucher", ...v });
+  return { rate: Math.round(rate * 100) / 100, parts };
+}
+

@@ -7,7 +7,7 @@ export const HITPAY_API = process.env.HITPAY_API_URL || "https://api.sandbox.hit
 const clampQty = (n: any) => Math.max(1, Math.min(99, Math.floor(Number(n) || 0)));
 
 // Re-check a cart from the browser against the database and price it on the server.
-export async function priceCart(rawCart: any[], opts: { pickup: boolean; zoneId?: string; discountRate: number }) {
+export async function priceCart(rawCart: any[], opts: { pickup: boolean; zoneId?: string; discountRate: number; freeDelivery?: boolean }) {
   const [products, bundles, config, zones] = await Promise.all([
     prisma.product.findMany({ where: { available: true } }),
     prisma.bundle.findMany(),
@@ -35,7 +35,7 @@ export async function priceCart(rawCart: any[], opts: { pickup: boolean; zoneId?
 
   const subtotal = cartSubtotal(cart, products, bundles);
   const zone = zones.find((z) => z.id === opts.zoneId) || zones[0];
-  const ship = opts.pickup ? 0 : deliveryFee(cart, zone, config, products, bundles);
+  const ship = opts.pickup || opts.freeDelivery ? 0 : deliveryFee(cart, zone, config, products, bundles);
   const discount = Math.round(subtotal * (opts.discountRate || 0) * 100) / 100;
   const total = Math.round((subtotal - discount + ship) * 100) / 100;
   return { cart, subtotal, discount, ship, total, zone };

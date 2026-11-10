@@ -110,5 +110,5 @@ export const FAQ = [
   { q:"How does delivery work?", qZh:"怎么配送？",
     a:"We deliver every jar ourselves, chilled, around Singapore. Delivery is free over $50, or you can self pick-up from our studio." },
   { q:"What do JoyJar Club members get?", qZh:"会员有什么福利？",
-    a:"Joining is free. You design your own member card with an avatar and a fish maw pet, and you get up to 15% off as you level up through four tiers." },
+    a:"Joining is free. You get 5% off your first order, design a member card with your own avatar and fish maw pet, and unlock up to 15% off plus free delivery as you move from Pearl to Jade, Gold and Diamond. Missions (like posting about JoyJar) earn extra 5% vouchers, and you can stack up to 35% off a single order." },
 ];

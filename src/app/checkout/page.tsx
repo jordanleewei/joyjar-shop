@@ -2,6 +2,7 @@ import React from "react";
 import { prisma } from "@/lib/db";
 import { CheckoutClient } from "./CheckoutClient";
 import { currentMember } from "@/lib/auth";
+import { discountOptions } from "@/lib/discounts";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function CheckoutPage() {
     prisma.deliveryZone.findMany({ orderBy: { fee: "asc" } }),
   ]);
   const m = await currentMember();
-  const member = m ? { name: m.name, email: m.email, discount: m.discount, tierIndex: m.tierIndex } : null;
+  const member = m ? { name: m.name, email: m.email, tierIndex: m.tierIndex, discounts: await discountOptions(m) } : null;
 
   return <CheckoutClient products={products} bundles={bundles} deliveryConfig={deliveryConfig} slots={slots} zones={zones} member={member} />;
 }

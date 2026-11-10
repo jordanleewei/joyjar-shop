@@ -7,6 +7,8 @@ import { Label, Btn } from "@/components/ui/components";
 import { MemberCard } from "@/components/club/MemberCard";
 import { CardDesigner } from "@/components/club/CardDesigner";
 import { Tiers } from "@/components/club/Tiers";
+import { MissionsPreview } from "@/components/club/Missions";
+import { PetPond } from "@/components/club/PetPond";
 import { TIERS, tierFor, parseCard, DEFAULT_CARD, CardDesign } from "@/lib/club";
 import { priceStr } from "@/components/ui/ShopBlocks";
 
@@ -100,9 +102,10 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
                 <h1 className="section-title club-title">Level up. Get a pet.<br /><em>Save on every jar.</em></h1>
                 <p className="section-lede">Free to join. Design your own member card with your avatar and a cute fish maw pet. It lives in your account, forever.</p>
                 <div className="club-chips">
-                  <span>4 tiers, up to 15% off</span>
+                  <span>5% off your first order</span>
+            <span>Up to 35% off with tiers + missions</span>
                   <span>Your avatar + a fish maw pet</span>
-                  <span>Accessories unlock as you level up</span>
+                  <span>Pearl → Jade → Gold → Diamond</span>
                 </div>
               </>
             )}
@@ -168,6 +171,22 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
           </div>
         </div>
       </section>
+
+      <section className="pond-section">
+        <div className="wrap pond-section-inner">
+          <div>
+            <Label zh="你的宠物">Meet your fish maw pet</Label>
+            <h2 className="section-title">Say hi to <em>{card.petName}</em>.</h2>
+            <p className="section-lede">Every member gets a little fish maw pet. Feed it, play with it, rename it, and dress it up. Accessories unlock as you move up from Pearl to Diamond.</p>
+            <ul className="pond-perks">
+              <li><b>🎀 Bow</b> Pearl</li><li><b>🌿 Leaf</b> Jade</li><li><b>⭐ Star</b> Gold</li><li><b>👑 Crown</b> Diamond</li>
+            </ul>
+          </div>
+          <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={360} />
+        </div>
+      </section>
+
+      <MissionsPreview />
 
       <Tiers current={member ? member.tierIndex : -1} />
       <Footer />

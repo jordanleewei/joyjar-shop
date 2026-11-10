@@ -73,6 +73,7 @@ model Order {
   method          String   // card, paynow
   items           String   // JSON string
   discount        Float    @default(0)
+  discountDetail  String   @default("") // JSON: which member discounts were applied
   hitpayId        String?
   memberId        String?
   member          Member?  @relation(fields: [memberId], references: [id])
@@ -87,5 +88,23 @@ model Member {
   name         String
   card         String   @default("{}") // JSON: avatar, pet, theme
   orders       Order[]
+  claims       MissionClaim[]
   createdAt    DateTime @default(now())
+}
+
+// A mission attempt. Screenshots are never stored — only a hash (to stop the
+// same image being reused) and the AI's short, non-personal verdict.
+model MissionClaim {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  mission     String
+  status      String   // approved | denied
+  reason      String   @default("")
+  imageHash   String
+  usedOrderId String?
+  createdAt   DateTime @default(now())
+
+  @@index([memberId])
+  @@index([imageHash])
 }

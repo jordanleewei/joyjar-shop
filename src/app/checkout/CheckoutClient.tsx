@@ -11,7 +11,7 @@ import { lineFor, boxSummary, boxTitle, cartSubtotal, deliveryFee } from "@/lib/
 import { optionSummary } from "@/lib/constants";
 import { checkoutSwim } from "@/components/ui/Fish";
 import Link from "next/link";
-import { TIERS } from "@/lib/club";
+import { TIERS, stackDiscounts, DiscountOptions } from "@/lib/club";
 
 
 function Field({ label, zh, value, onChange, placeholder, type = "text", wide }: any) {
@@ -69,6 +69,10 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  // which member discounts to use (all on by default; the server re-checks and caps at 35%)
+  const [useDisc, setUseDisc] = useState<{ tier: boolean; welcome: boolean; vouchers: string[] }>(() => ({
+    tier: true, welcome: true, vouchers: (member?.discounts?.vouchers || []).map((v: any) => v.id),
+  }));
 
   useEffect(() => {
     prune(products.map((p: any) => p.id), bundles.map((b: any) => b.id));
@@ -78,11 +82,15 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
   const sub = cartSubtotal(cart, products, bundles);
   const zone = zones.find((z: any) => z.id === zoneId);
   const isPickup = deliveryMode === "pickup";
-  const ship = isPickup ? 0 : deliveryFee(cart, zone, deliveryConfig, products, bundles);
-  const rate = member?.discount || 0;
+  const opts: DiscountOptions | null = member?.discounts || null;
+  const freeShip = !!opts?.freeDelivery;
+  const ship = isPickup || freeShip ? 0 : deliveryFee(cart, zone, deliveryConfig, products, bundles);
+  const stacked = opts ? stackDiscounts(opts, useDisc) : { rate: 0, parts: [] as any[] };
+  const rate = stacked.rate;
   const disc = Math.round(sub * rate * 100) / 100;
   const total = Math.round((sub - disc + ship) * 100) / 100;
   const tier = member ? TIERS[member.tierIndex] : null;
+  const usedIds = new Set(stacked.parts.map((p: any) => p.id).filter(Boolean));
 
   if (!mounted) return null;
 
@@ -102,7 +110,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
       const res = await fetch("/api/create-hitpay-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart, form, pickup: isPickup, zoneId, slot: slotString, pay })
+        body: JSON.stringify({ cart, form, pickup: isPickup, zoneId, slot: slotString, pay, discounts: useDisc })
       });
       const data = await res.json();
 
@@ -158,9 +166,9 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
             <section className="ck-block">
               <h3 className="ck-h">Contact · 联系</h3>
               <div className="field-grid">
-                <Field label="Full name" zh="姓名" value={form.name} onChange={set("name")} placeholder="Jane Tan" />
+                <Field label="Full name" zh="姓名" value={form.name} onChange={set("name")} placeholder="JoyJar" />
                 <Field label="Phone" zh="电话" value={form.phone} onChange={set("phone")} placeholder="+65 ····" />
-                <Field label="Email" zh="邮箱" value={form.email} onChange={set("email")} placeholder="jane@email.com" type="email" wide />
+                <Field label="Email" zh="邮箱" value={form.email} onChange={set("email")} placeholder="joyjar@email.com" type="email" wide />
               </div>
             </section>
 
@@ -315,8 +323,38 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
               <span>{isPickup ? "Self pick-up 自取" : "Delivery 运费"}</span>
               <span>{isPickup ? "Free 免费" : (ship === 0 ? "Free 免费" : priceStr(ship))}</span>
             </div>
+            {opts && (opts.tier || opts.welcome || opts.vouchers.length > 0 || freeShip) && (
+              <div className="disc-box">
+                <div className="disc-head"><strong>Your member discounts · 会员优惠</strong><span>{Math.round(rate * 100)}% of {Math.round(opts.cap * 100)}% max</span></div>
+                <div className="disc-meter"><span style={{ width: `${(rate / opts.cap) * 100}%` }} /></div>
+                {opts.tier && (
+                  <label className="disc-row">
+                    <input type="checkbox" checked={useDisc.tier} onChange={(e) => setUseDisc((d) => ({ ...d, tier: e.target.checked }))} />
+                    <span>{opts.tier.label}</span><b>{Math.round(opts.tier.rate * 100)}%</b>
+                  </label>
+                )}
+                {opts.welcome && (
+                  <label className="disc-row">
+                    <input type="checkbox" checked={useDisc.welcome} onChange={(e) => setUseDisc((d) => ({ ...d, welcome: e.target.checked }))} />
+                    <span>{opts.welcome.label}</span><b>{Math.round(opts.welcome.rate * 100)}%</b>
+                  </label>
+                )}
+                {opts.vouchers.map((v) => {
+                  const on = useDisc.vouchers.includes(v.id);
+                  const wontFit = on && !usedIds.has(v.id);
+                  return (
+                    <label className={`disc-row ${wontFit ? "is-over" : ""}`} key={v.id}>
+                      <input type="checkbox" checked={on} onChange={(e) => setUseDisc((d) => ({ ...d, vouchers: e.target.checked ? [...d.vouchers, v.id] : d.vouchers.filter((x) => x !== v.id) }))} />
+                      <span>Voucher · {v.label}{wontFit ? " (over the 35% cap, saved for later)" : ""}</span><b>{Math.round(v.rate * 100)}%</b>
+                    </label>
+                  );
+                })}
+                {freeShip && !isPickup && <p className="disc-note">🚚 Free delivery with your {tier?.en} membership</p>}
+                <p className="disc-note">Untick anything you&apos;d like to save for another order.</p>
+              </div>
+            )}
             {disc > 0 && (
-              <div className="summary-row member-disc"><span>{tier?.en} member −{Math.round(rate * 100)}%</span><span>−{priceStr(disc)}</span></div>
+              <div className="summary-row member-disc"><span>Member discount −{Math.round(rate * 100)}%</span><span>−{priceStr(disc)}</span></div>
             )}
             <div className="summary-row total"><span>Total 总计</span><span>{priceStr(total)}</span></div>
             {error && <p className="form-err" role="alert">{error}</p>}
@@ -325,7 +363,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, slots, zones
             </Btn>
             {!member && (
               <p className="summary-hint member-hint">
-                <Link href="/club" data-nofish="1">Join the JoyJar Club</Link> free to save up to 15% as you level up.
+                <Link href="/club" data-nofish="1">Join the JoyJar Club</Link> free: 5% off your first order, plus up to 35% off with tiers and missions.
               </p>
             )}
             <p className="summary-secure">🔒 Secure Checkout by HitPay</p>

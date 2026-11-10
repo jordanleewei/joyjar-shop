@@ -89,7 +89,7 @@ function ConfirmContent() {
         )}
         {paid && !order.member && (
           <p className="confirm-note">
-            <Link href="/club" className="link-quiet">Join the JoyJar Club</Link> so your next orders count towards up to 15% off.
+            <Link href="/club" className="link-quiet">Join the JoyJar Club</Link> for 5% off your next order, free delivery from Jade, and up to 35% off with missions.
           </p>
         )}
         {!paid && (

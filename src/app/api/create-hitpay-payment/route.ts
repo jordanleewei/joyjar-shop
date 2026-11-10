@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { currentMember } from '@/lib/auth';
 import { priceCart, newOrderNum, HITPAY_API } from '@/lib/orders';
+import { discountOptions, stackDiscounts } from '@/lib/discounts';
 
 // Prices the cart on the server, saves a pending order, then opens a HitPay payment request.
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cart, form = {}, pickup = false, zoneId, slot = "", pay = "paynow" } = body || {};
+    const { cart, form = {}, pickup = false, zoneId, slot = "", pay = "paynow", discounts = {} } = body || {};
 
     const hitpayApiKey = process.env.HITPAY_API_KEY;
     if (!hitpayApiKey) {
@@ -19,9 +20,15 @@ export async function POST(request: Request) {
     }
 
     const member = await currentMember();
+    // member discounts: only what they ticked, re-checked here, capped at 35%
+    const opts = member ? await discountOptions(member) : null;
+    const stacked = opts ? stackDiscounts(opts, {
+      tier: !!discounts.tier, welcome: !!discounts.welcome,
+      vouchers: Array.isArray(discounts.vouchers) ? discounts.vouchers.map(String) : [],
+    }) : { rate: 0, parts: [] };
     let priced;
     try {
-      priced = await priceCart(cart, { pickup: !!pickup, zoneId, discountRate: member?.discount || 0 });
+      priced = await priceCart(cart, { pickup: !!pickup, zoneId, discountRate: stacked.rate, freeDelivery: !!opts?.freeDelivery });
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 400 });
     }
@@ -45,8 +52,14 @@ export async function POST(request: Request) {
         method: pay === "card" ? "card" : "paynow",
         items: JSON.stringify(priced.cart),
         memberId: member?.id || null,
+        discountDetail: stacked.parts.length ? JSON.stringify(stacked.parts.map((p) => ({ kind: p.kind, label: p.label, rate: p.rate }))) : "",
       },
     });
+    // hold the vouchers used on this order (they free up again if it's never paid)
+    const voucherIds = stacked.parts.filter((p) => p.kind === "voucher" && p.id).map((p) => p.id as string);
+    if (voucherIds.length && member) {
+      await prisma.missionClaim.updateMany({ where: { id: { in: voucherIds }, memberId: member.id }, data: { usedOrderId: order.id } });
+    }
 
     const origin = new URL(request.url).origin;
     const params = new URLSearchParams();

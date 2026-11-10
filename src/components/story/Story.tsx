@@ -299,9 +299,10 @@ export function ClubTeaser() {
           <h2 className="section-title">Level up. Get a pet.<br /><em>Save on every jar.</em></h2>
           <p className="section-lede">Free to join. Design your own member card with your avatar and a cute fish maw pet. It lives in your account, forever.</p>
           <div className="club-chips">
-            <span>4 tiers, up to 15% off</span>
+            <span>5% off your first order</span>
+            <span>Up to 35% off with tiers + missions</span>
             <span>Your avatar + a fish maw pet</span>
-            <span>Accessories unlock as you level up</span>
+            <span>Pearl → Jade → Gold → Diamond</span>
           </div>
           <Link href="/club" passHref legacyBehavior>
             <Btn as="a">Join the club · 加入会员</Btn>

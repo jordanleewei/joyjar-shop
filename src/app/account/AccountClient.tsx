@@ -8,12 +8,15 @@ import { Label, Btn } from "@/components/ui/components";
 import { MemberCard, FishMawPet } from "@/components/club/MemberCard";
 import { CardDesigner } from "@/components/club/CardDesigner";
 import { Tiers } from "@/components/club/Tiers";
+import { MissionsPanel } from "@/components/club/Missions";
+import { PetPond } from "@/components/club/PetPond";
 import { TIERS, tierFor, parseCard, memberNo, unlockedAccessories, CardDesign } from "@/lib/club";
 import { priceStr } from "@/components/ui/ShopBlocks";
 
-type Tab = "overview" | "pet" | "card" | "orders" | "settings";
+type Tab = "overview" | "missions" | "pet" | "card" | "orders" | "settings";
 const TABS: { id: Tab; en: string; zh: string }[] = [
   { id: "overview", en: "Overview", zh: "总览" },
+  { id: "missions", en: "Missions", zh: "任务" },
   { id: "pet", en: "My pet", zh: "宠物" },
   { id: "card", en: "My card", zh: "卡面" },
   { id: "orders", en: "Orders", zh: "订单" },
@@ -133,13 +136,13 @@ export function AccountClient({ member, orders }: { member: any; orders: any[] }
             </div>
           )}
 
+          {tab === "missions" && <MissionsPanel />}
+
           {tab === "pet" && (
             <div className="acct-split">
-              <div className="pet-stage">
-                <div className="pet-bubbles" aria-hidden="true"><i /><i /><i /></div>
-                <FishMawPet colour={card.petColour} accessory={card.accessory} size={240} bounce />
-                <span className="pet-stage-name">{card.petName}</span>
-                <p className="muted small">{unlocked.length - 1} of 4 accessories unlocked</p>
+              <div>
+                <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={400} />
+                <p className="muted small" style={{ marginTop: 10 }}>{unlocked.length - 1} of 4 accessories unlocked · more unlock as you move up tiers</p>
               </div>
               <div>
                 <Label zh="我的宠物">Your fish maw pet</Label>
