@@ -6,34 +6,9 @@ import { Header, Footer } from "@/components/layout/Shared";
 import { Label, Btn } from "@/components/ui/components";
 import { MemberCard } from "@/components/club/MemberCard";
 import { CardDesigner } from "@/components/club/CardDesigner";
+import { Tiers } from "@/components/club/Tiers";
 import { TIERS, tierFor, parseCard, DEFAULT_CARD, CardDesign } from "@/lib/club";
 import { priceStr } from "@/components/ui/ShopBlocks";
-
-function Tiers({ current = -1 }: { current?: number }) {
-  return (
-    <section className="club-tiers">
-      <div className="wrap">
-        <div className="section-head center">
-          <Label zh="会员等级">Four tiers</Label>
-          <h2 className="section-title">The more you scoop, the more you save.</h2>
-          <p className="section-lede">Your tier goes up automatically with every paid order while you&apos;re logged in. Discounts come off the jars, every time.</p>
-        </div>
-        <div className="tier-grid">
-          {TIERS.map((t, i) => (
-            <div key={t.id} className={`tier-card ${i === current ? "is-current" : ""} ${i < current ? "is-done" : ""}`}>
-              {i === current && <span className="ribbon">You&apos;re here · 当前</span>}
-              <span className="tier-zh">{t.zh}</span>
-              <h3 className="tier-name">{t.en}</h3>
-              <p className="tier-off">{t.discount ? `${Math.round(t.discount * 100)}% off` : "Free to join"}</p>
-              <p className="tier-min">{t.min ? `From ${priceStr(t.min)} spent` : "Sign up"}</p>
-              <ul className="tier-perks">{t.perks.map((p) => <li key={p}>{p}</li>)}</ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function JoinForm({ card, name, setName }: { card: CardDesign; name: string; setName: (s: string) => void }) {
   const router = useRouter();
@@ -53,6 +28,7 @@ function JoinForm({ card, name, setName }: { card: CardDesign; name: string; set
     const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) { setErr(data.error || "Something went wrong."); return; }
+    router.push("/account");
     router.refresh();
   };
 

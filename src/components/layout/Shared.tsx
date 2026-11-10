@@ -43,8 +43,8 @@ export function Header() {
           ))}
         </nav>
         <div className="header-actions">
-          <Link href="/club" className={`member-btn ${memberName ? "is-member" : ""}`} data-nofish="1">
-            {memberName ? <>My card<span className="member-dot" /></> : <>Join<span className="nav-zh"> 入会</span></>}
+          <Link href={memberName ? "/account" : "/account/login"} className={`member-btn ${memberName ? "is-member" : ""}`} data-nofish="1">
+            {memberName ? <>My account<span className="member-dot" /></> : <>Log in<span className="nav-zh"> 登录</span></>}
           </Link>
           <Link href="/cart" className="cart-btn" data-nofish="1" aria-label="View cart">
             <span className="cart-zh">购物篮</span>

@@ -21,20 +21,21 @@ function Swatches({ list, value, onChange, label }: { list: string[]; value: num
   );
 }
 
-export function CardDesigner({ d, onChange, tierIndex = 0 }: { d: CardDesign; onChange: (d: CardDesign) => void; tierIndex?: number }) {
-  const [tab, setTab] = useState<"you" | "pet" | "card">("you");
+export function CardDesigner({ d, onChange, tierIndex = 0, only }: { d: CardDesign; onChange: (d: CardDesign) => void; tierIndex?: number; only?: "you" | "pet" | "card" }) {
+  const [tabState, setTab] = useState<"you" | "pet" | "card">("you");
+  const tab = only || tabState;
   const set = (patch: Partial<CardDesign>) => onChange({ ...d, ...patch });
   const unlocked = unlockedAccessories(tierIndex);
   const unlockTier = (id: string) => TIERS.find((t) => t.unlocks.includes(id));
 
   return (
     <div className="cd">
-      <div className="cd-tabs" role="tablist">
+      {!only && <div className="cd-tabs" role="tablist">
         {([["you", "You · 头像"], ["pet", "Pet · 宠物"], ["card", "Card · 卡面"]] as const).map(([id, l]) => (
           <button key={id} role="tab" aria-selected={tab === id} data-nofish="1" type="button"
             className={`cd-tab ${tab === id ? "is-on" : ""}`} onClick={() => setTab(id)}>{l}</button>
         ))}
-      </div>
+      </div>}
 
       {tab === "you" && (
         <div className="cd-panel">
