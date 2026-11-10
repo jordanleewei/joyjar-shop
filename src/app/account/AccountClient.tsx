@@ -10,7 +10,7 @@ import { CardDesigner } from "@/components/club/CardDesigner";
 import { Tiers } from "@/components/club/Tiers";
 import { MissionsPanel } from "@/components/club/Missions";
 import { PetPond } from "@/components/club/PetPond";
-import { TIERS, tierFor, parseCard, memberNo, unlockedAccessories, CardDesign } from "@/lib/club";
+import { TIERS, tierFor, parseCard, memberNo, unlockedAccessories, CardDesign, ACCESSORIES, MAX_STACKED, FREE_DELIVERY_FROM_TIER } from "@/lib/club";
 import { priceStr } from "@/components/ui/ShopBlocks";
 
 type Tab = "overview" | "missions" | "pet" | "card" | "orders" | "settings";
@@ -23,7 +23,7 @@ const TABS: { id: Tab; en: string; zh: string }[] = [
   { id: "settings", en: "Settings", zh: "设置" },
 ];
 
-export function AccountClient({ member, orders }: { member: any; orders: any[] }) {
+export function AccountClient({ member, orders, perks }: { member: any; orders: any[]; perks: { vouchers: number; welcome: boolean } }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("overview");
   const [card, setCard] = useState<CardDesign>(() => parseCard(member.card));
@@ -114,13 +114,8 @@ export function AccountClient({ member, orders }: { member: any; orders: any[] }
         <div className="wrap">
           {tab === "overview" && (
             <div className="acct-overview">
-              <div className="acct-panel">
-                <h3 className="ck-h">Your perks · 会员福利</h3>
-                <ul className="tier-perks">{TIERS.slice(0, t.index + 1).flatMap((x) => x.perks).map((p) => <li key={p}>{p}</li>)}</ul>
-                {t.next && (
-                  <p className="muted small acct-next">Next up at <strong>{t.next.en}</strong>: {t.next.perks.join(" · ")}</p>
-                )}
-              </div>
+              <PerksPanel tierIndex={t.index} vouchers={perks.vouchers} welcome={perks.welcome}
+                onMissions={() => go("missions")} onPet={() => go("pet")} />
               <div className="acct-panel acct-pet-mini">
                 <h3 className="ck-h">{card.petName} says hi 👋</h3>
                 <div className="pet-stage pet-stage-sm"><FishMawPet colour={card.petColour} accessory={card.accessory} size={130} bounce /></div>
@@ -241,6 +236,60 @@ function Settings({ email, onLogout }: { email: string; onLogout: () => void }) 
         <p className="muted">Questions about an order or your membership? Message us on WhatsApp with your member number.</p>
         <Link href="/#faq" className="link-quiet">Read the FAQ →</Link>
       </div>
+    </div>
+  );
+}
+
+// What the member gets right now (one line per benefit, not every tier's list),
+// plus a peek at what the next tier adds.
+function PerksPanel({ tierIndex, vouchers, welcome, onMissions, onPet }: { tierIndex: number; vouchers: number; welcome: boolean; onMissions: () => void; onPet: () => void }) {
+  const tier = TIERS[tierIndex];
+  const next = TIERS[tierIndex + 1];
+  const unlocked = unlockedAccessories(tierIndex).filter((a) => a !== "none");
+  const icon = (id: string) => (ACCESSORIES.find((a) => a.id === id)?.en || "").split(" ")[0];
+  const freeDelivery = tierIndex >= FREE_DELIVERY_FROM_TIER;
+  const tiles: { k: string; icon: string; title: string; sub: string; action?: () => void; actionLabel?: string; dim?: boolean }[] = [
+    tier.discount
+      ? { k: "disc", icon: "%", title: `${Math.round(tier.discount * 100)}% off every order`, sub: `${tier.en} member price, applied at checkout` }
+      : welcome
+        ? { k: "disc", icon: "%", title: "5% off your first order", sub: "Welcome gift, applied at checkout" }
+        : { k: "disc", icon: "%", title: "Member discounts", sub: `Reach ${next?.en || "the next tier"} for ${Math.round((next?.discount || 0) * 100)}% off every order`, dim: true },
+    freeDelivery
+      ? { k: "ship", icon: "🚚", title: "Free delivery", sub: "On every order, no minimum" }
+      : { k: "ship", icon: "🚚", title: "Free delivery over $50", sub: `Every order is free from ${TIERS[FREE_DELIVERY_FROM_TIER].en}`, dim: true },
+    { k: "vouch", icon: "🎟️", title: vouchers ? `${vouchers} voucher${vouchers > 1 ? "s" : ""} ready` : "Earn 5% vouchers",
+      sub: vouchers ? `5% each · stack up to ${Math.round(MAX_STACKED * 100)}% off per order` : "Complete missions to collect them", action: onMissions, actionLabel: vouchers ? "Get more" : "See missions" },
+    { k: "pet", icon: "🐟", title: `${unlocked.length} of ${ACCESSORIES.length - 1} pet accessories`, sub: unlocked.map(icon).join(" "), action: onPet, actionLabel: "Dress up" },
+  ];
+  return (
+    <div className="acct-panel perks-panel">
+      <div className="perks-head">
+        <h3 className="ck-h">Your perks · 会员福利</h3>
+        <span className="perks-tier">{tier.zh} · {tier.en}</span>
+      </div>
+      <ul className="perk-tiles">
+        {tiles.map((x) => (
+          <li key={x.k} className={`perk-tile ${x.dim ? "is-dim" : ""}`}>
+            <span className="perk-icon" aria-hidden="true">{x.icon}</span>
+            <div className="perk-text">
+              <strong>{x.title}</strong><small>{x.sub}</small>
+              {x.action && <button type="button" className="perk-act" data-nofish="1" onClick={x.action}>{x.actionLabel} →</button>}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {next ? (
+        <div className="perk-next">
+          <span className="perk-next-label">Next: {next.zh} · {next.en}</span>
+          <div className="perk-next-chips">
+            <span>{Math.round(next.discount * 100)}% off every order</span>
+            {!freeDelivery && tierIndex + 1 >= FREE_DELIVERY_FROM_TIER && <span>Free delivery</span>}
+            <span>{next.unlocks.map(icon).join(" ")} accessories</span>
+          </div>
+        </div>
+      ) : (
+        <p className="perk-next perk-top">💎 You&apos;ve reached the top tier. Thank you!</p>
+      )}
     </div>
   );
 }

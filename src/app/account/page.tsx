@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { currentMember } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountClient } from "./AccountClient";
+import { discountOptions } from "@/lib/discounts";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "My account · JoyJar Club 小胶傲俱乐部" };
@@ -18,5 +19,7 @@ export default async function AccountPage() {
     num: o.num, total: o.total, discount: o.discount, status: o.status,
     date: o.createdAt.toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" }),
   }));
-  return <AccountClient member={member} orders={orders} />;
+  const opts = await discountOptions(member);
+  const perks = { vouchers: opts.vouchers.length, welcome: !!opts.welcome };
+  return <AccountClient member={member} orders={orders} perks={perks} />;
 }
