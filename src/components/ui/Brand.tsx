@@ -80,5 +80,5 @@ export function Logo({ compact = false }: { onClick?: () => void, compact?: bool
   // Brand lockups drawn from the official 小胶傲.ai artwork
   return compact
     ? <img className="logo logo-stacked-img" src="/assets/joyjar-logo-light.svg" alt="小胶傲 JoyJar" width={96} height={115} draggable={false} />
-    : <img className="logo logo-horizontal" src="/assets/joyjar-logo-horizontal-light.svg" alt="小胶傲 JoyJar" width={127} height={52} draggable={false} />;
+    : <img className="logo logo-horizontal" src="/assets/joyjar-logo-horizontal-green.svg" alt="小胶傲 JoyJar" width={127} height={52} draggable={false} />;
 }

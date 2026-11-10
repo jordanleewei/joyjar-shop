@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { FishProvider } from "@/components/ui/Fish";
-import { JinglePlayer } from "@/components/ui/Jingle";
 
 const SITE_DESC = "一罐花胶，满满胶傲 · Fresh fish maw slow-stewed with real ingredients and milk. Pandan, Noir, Calm and Rose. No preservatives, made fresh in Singapore.";
 
@@ -51,7 +50,6 @@ export default function RootLayout({
       <body>
         <FishProvider />
         {children}
-        <JinglePlayer />
       </body>
     </html>
   );
