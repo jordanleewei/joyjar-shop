@@ -1203,3 +1203,28 @@ html{ scroll-padding-top:90px; }
 .site-footer .footer-disclaimer{ color:var(--band-faint); }
 /* keep the floating song button readable over the dark footer */
 .jingle{ box-shadow:4px 5px 0 var(--ink), 0 0 0 1px rgba(246,239,226,.25), 0 18px 30px -18px rgba(0,0,0,.6); }
+
+/* ---------- Chinese red & gold header / footer (overrides the ink bands) ---------- */
+:root{ --band:#9e2a20; --band-deep:#7a1d16; --band-ink:#fdf1dc; --band-gold:#e8c46e; --band-soft:#f3d9b8; --band-faint:#e2b79a; }
+.site-header{ background:color-mix(in srgb,var(--band) 97%, transparent); border-bottom:3px solid var(--band-gold); box-shadow:0 1px 0 var(--band-deep), 0 8px 20px -14px rgba(90,20,12,.6); }
+.site-header .nav-link{ color:var(--band-ink); }
+.site-header .nav-zh{ color:var(--band-faint); }
+.site-header .nav-link:hover,.site-header .nav-link.is-on{ color:var(--band-gold); background:rgba(0,0,0,.14); }
+.site-header .nav-link.is-on .nav-zh,.site-header .nav-link:hover .nav-zh{ color:var(--band-gold); }
+.site-header .member-btn,.site-header .cart-btn{ color:var(--band-ink); border-color:rgba(232,196,110,.65); }
+.site-header .member-btn:hover,.site-header .cart-btn:hover{ border-color:var(--band-gold); color:var(--band-gold); background:rgba(0,0,0,.12); }
+.site-header .member-btn.is-member{ border-color:var(--band-gold); }
+.site-header .member-dot{ background:var(--band-gold); }
+.site-header .cart-zh{ color:var(--band-soft); }
+.site-header .cart-count{ background:var(--band-gold); color:var(--band-deep); }
+@media (max-width:1020px){
+  .site-header .nav-pill{ background:rgba(0,0,0,.12); color:var(--band-ink); border-color:rgba(232,196,110,.5); }
+  .site-header .nav-pill.is-on{ background:var(--band-gold); border-color:var(--band-gold); color:var(--band-deep); font-weight:600; }
+}
+.site-footer{ background:linear-gradient(var(--band), var(--band-deep)); color:var(--band-ink); border-top:3px solid var(--band-gold); }
+.site-footer::before{ opacity:.55; background:radial-gradient(circle at 10px -2px, transparent 9px, var(--band-gold) 10px, transparent 11px) repeat-x; background-size:20px 14px; }
+.site-footer .footer-zh{ color:var(--band-gold); }
+.site-footer .footer-nav a{ color:var(--band-ink); }
+.site-footer .footer-nav a:hover{ color:var(--band-gold); }
+.site-footer .footer-fine{ color:var(--band-soft); }
+.site-footer .footer-disclaimer{ color:var(--band-faint); }
