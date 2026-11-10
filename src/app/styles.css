@@ -1353,3 +1353,16 @@ html{ scroll-padding-top:90px; }
 .todo button:hover{ border-color:var(--gold); }
 .btn.is-incomplete{ background:var(--green, #2f4a34); color:#fbf6ea; border:1px solid transparent; box-shadow:0 14px 28px -18px rgba(40,70,45,.7); }
 .ck-num{ background:var(--paper-2); }
+
+/* ---------- Card patterns + outfit picker ---------- */
+.mcard-pattern{ position:absolute; inset:0; opacity:.2; pointer-events:none; }
+.mcard > .mcard-top, .mcard > .mcard-body{ z-index:1; }
+.mcard > .mcard-pet{ z-index:1; }
+.cd-patterns{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; width:100%; }
+.cd-pat{ display:flex; flex-direction:column; gap:6px; padding:6px; border:1.5px solid var(--line,#e2d8c6); border-radius:14px; background:#fff; cursor:pointer; text-align:left; font:inherit; color:inherit; transition:border-color .15s, transform .15s; }
+.cd-pat:hover{ transform:translateY(-1px); }
+.cd-pat.is-on{ border-color:#2c2823; box-shadow:0 0 0 2px #2c2823 inset; }
+.cd-pat-sw{ position:relative; display:block; height:40px; border-radius:9px; overflow:hidden; }
+.cd-pat-sw .mcard-pattern{ opacity:.45; }
+.cd-pat-l{ font-size:12px; font-weight:600; line-height:1.2; padding:0 2px 2px; }
+.cd-pat-l small{ display:block; font-weight:400; opacity:.65; font-family:var(--font-zh); }

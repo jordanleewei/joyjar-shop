@@ -201,7 +201,7 @@ export function FishProvider() {
     const handler = (e: MouseEvent) => {
       // fish swim out of buttons (any <button>, button-style link or [data-fish])
       const t = e.target as HTMLElement;
-      const btn = t.closest("button, [role='button'], a.btn, a.cart-btn, a.member-btn, a.nav-pill, [data-fish]") as HTMLElement | null;
+      const btn = t.closest("button, [role='button'], a.btn, a.cart-btn, a.member-btn, a.nav-pill, a.nav-link, .site-header a, [data-fish]") as HTMLElement | null;
       if (!btn || (btn as HTMLButtonElement).disabled) return;
       let x = e.clientX, y = e.clientY;
       if (x === 0 && y === 0) { const r = btn.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }

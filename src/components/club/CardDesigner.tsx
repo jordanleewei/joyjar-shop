@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import {
-  SKIN, HAIR_COLOURS, HAIR_STYLES, TOPS, LOOKS, FACIAL, DEFAULT_HAIR, CARD_THEMES, PET_COLOURS, ACCESSORIES, TIERS,
+  SKIN, HAIR_COLOURS, hairFor, TOPS, CLOTHES, CARD_PATTERNS, LOOKS, FACIAL, DEFAULT_HAIR, CARD_THEMES, PET_COLOURS, ACCESSORIES, TIERS,
   CardDesign, unlockedAccessories,
 } from "@/lib/club";
-import { FishMawPet } from "./MemberCard";
+import { FishMawPet, CardPattern } from "./MemberCard";
 
 function Swatches({ list, value, onChange, label }: { list: string[]; value: number; onChange: (i: number) => void; label: string }) {
   return (
@@ -44,19 +44,23 @@ export function CardDesigner({ d, onChange, tierIndex = 0, only }: { d: CardDesi
             <div className="cd-chips">
               {LOOKS.map((l) => (
                 <button key={l.id} type="button" data-nofish="1" className={`chip ${d.look === l.id ? "is-on" : ""}`}
-                  onClick={() => d.look !== l.id && set({ look: l.id, hair: DEFAULT_HAIR[l.id], facial: "none" })}>{l.en}<small>{l.zh}</small></button>
+                  onClick={() => d.look !== l.id && set({
+                    look: l.id,
+                    hair: hairFor(l.id).some((h) => h.id === d.hair) ? d.hair : DEFAULT_HAIR[l.id],
+                    facial: l.id === "f" ? "none" : d.facial,
+                  })}>{l.en}<small>{l.zh}</small></button>
               ))}
             </div>
           </div>
           <div className="cd-row">
             <span className="cd-label">Hair</span>
             <div className="cd-chips">
-              {HAIR_STYLES.filter((h) => h.look === d.look).map((h) => (
+              {hairFor(d.look).map((h) => (
                 <button key={h.id} type="button" data-nofish="1" className={`chip ${d.hair === h.id ? "is-on" : ""}`} onClick={() => set({ hair: h.id })}>{h.en}</button>
               ))}
             </div>
           </div>
-          {d.look === "m" && (
+          {d.look !== "f" && (
             <div className="cd-row">
               <span className="cd-label">Facial hair</span>
               <div className="cd-chips">
@@ -68,7 +72,15 @@ export function CardDesigner({ d, onChange, tierIndex = 0, only }: { d: CardDesi
           )}
           <Swatches label="Hair colour" list={HAIR_COLOURS} value={d.hairColour} onChange={(i) => set({ hairColour: i })} />
           <Swatches label="Skin" list={SKIN} value={d.skin} onChange={(i) => set({ skin: i })} />
-          <Swatches label="Top" list={TOPS} value={d.top} onChange={(i) => set({ top: i })} />
+          <div className="cd-row">
+            <span className="cd-label">Outfit</span>
+            <div className="cd-chips">
+              {CLOTHES.map((c) => (
+                <button key={c.id} type="button" data-nofish="1" className={`chip ${d.clothes === c.id ? "is-on" : ""}`} onClick={() => set({ clothes: c.id })}>{c.en}<small>{c.zh}</small></button>
+              ))}
+            </div>
+          </div>
+          <Swatches label="Outfit colour" list={TOPS} value={d.top} onChange={(i) => set({ top: i })} />
         </div>
       )}
 
@@ -119,6 +131,21 @@ export function CardDesigner({ d, onChange, tierIndex = 0, only }: { d: CardDesi
                   <i style={{ background: t.bg, borderColor: t.deep }} />{t.en}
                 </button>
               ))}
+            </div>
+          </div>
+          <div className="cd-row">
+            <span className="cd-label">Pattern</span>
+            <div className="cd-patterns">
+              {CARD_PATTERNS.map((p) => {
+                const th = CARD_THEMES.find((t) => t.id === d.theme) || CARD_THEMES[0];
+                return (
+                  <button key={p.id} type="button" data-nofish="1" aria-pressed={d.pattern === p.id}
+                    className={`cd-pat ${d.pattern === p.id ? "is-on" : ""}`} onClick={() => set({ pattern: p.id })}>
+                    <span className="cd-pat-sw" style={{ background: th.bg }}><CardPattern id={p.id} colour={th.deep} /></span>
+                    <span className="cd-pat-l">{p.en}<small>{p.zh}</small></span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
