@@ -1609,3 +1609,6 @@ a.prd-card:hover{ border-color:#2f4a34; transform:translateY(-1px); }
 .field-hint{ font-size:12px; color:var(--ink-soft); margin-top:4px; display:block; }
 .ps-buys{ display:flex; gap:6px; }
 .ps-buy.is-quiet{ border-color:var(--hair-strong); font-weight:500; }
+.prd-divider{ font-size:18px; margin:24px 0 12px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; border-top:1px solid rgba(70,52,28,.14); padding-top:18px; }
+.prd-divider span{ font-size:12px; background:#efe8da; border-radius:999px; padding:2px 9px; }
+.prd-divider small{ flex-basis:100%; font-weight:400; font-size:13px; color:#766c5f; }

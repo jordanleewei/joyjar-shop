@@ -10,7 +10,8 @@ const money = (n: number) => "$" + Number(n).toFixed(2);
 
 export function ProductsClient({ rows, single, box }: { rows: Row[]; single: number; box: number }) {
   const router = useRouter();
-  const live = rows.filter((r) => !r.archived);
+  const live = rows.filter((r) => !r.archived && r.available);
+  const hidden = rows.filter((r) => !r.archived && !r.available);
   const removed = rows.filter((r) => r.archived);
   const [busy, setBusy] = useState("");
 
@@ -32,20 +33,18 @@ export function ProductsClient({ rows, single, box }: { rows: Row[]; single: num
 
       <Prices single={single} box={box} />
 
+      <h2 className="prd-divider">In the shop · 在售 <span>{live.length}</span></h2>
+      {live.length === 0 && <div className="adm-empty">No products in the shop. Open one below and tick “Show in the shop”.</div>}
       <div className="prd-grid">
-        {live.map((r) => (
-          <Link key={r.id} href={`/admin/products/${encodeURIComponent(r.id)}`} className={`prd-card ${r.available ? "" : "is-hidden"}`} data-nofish="1">
-            <div className="prd-photo"><ProductPhoto p={r} size={0.5} /></div>
-            <div className="prd-body">
-              <strong>{r.flavorEn} <span>{r.flavorZh}</span></strong>
-              <small>{r.name}</small>
-              <span className="prd-price">{money(r.price ?? single)}{r.price == null ? <em> standard</em> : <em> own price</em>}</span>
-              <span className={`stk-badge ${r.available ? "stk-ok" : "stk-off"}`}>{r.available ? "In the shop" : "Hidden"}</span>
-            </div>
-            <span className="prd-edit">Edit →</span>
-          </Link>
-        ))}
+        {live.map((r) => <Card key={r.id} r={r} single={single} />)}
       </div>
+
+      {hidden.length > 0 && <>
+        <h2 className="prd-divider">Hidden · 未上架 <span>{hidden.length}</span><small>Not shown to customers. Open one and tick “Show in the shop” to sell it.</small></h2>
+        <div className="prd-grid">
+          {hidden.map((r) => <Card key={r.id} r={r} single={single} />)}
+        </div>
+      </>}
 
       {removed.length > 0 && (
         <details className="stk-hidden">
@@ -62,6 +61,21 @@ export function ProductsClient({ rows, single, box }: { rows: Row[]; single: num
         </details>
       )}
     </main>
+  );
+}
+
+function Card({ r, single }: { r: Row; single: number }) {
+  return (
+    <Link href={`/admin/products/${encodeURIComponent(r.id)}`} className={`prd-card ${r.available ? "" : "is-hidden"}`} data-nofish="1">
+      <div className="prd-photo"><ProductPhoto p={r} size={0.5} /></div>
+      <div className="prd-body">
+        <strong>{r.flavorEn} <span>{r.flavorZh}</span></strong>
+        <small>{r.name}</small>
+        <span className="prd-price">{money(r.price ?? single)}{r.price == null ? <em> standard</em> : <em> own price</em>}</span>
+        <span className={`stk-badge ${r.available ? "stk-ok" : "stk-off"}`}>{r.available ? "In the shop" : "Hidden"}</span>
+      </div>
+      <span className="prd-edit">Edit →</span>
+    </Link>
   );
 }
 
