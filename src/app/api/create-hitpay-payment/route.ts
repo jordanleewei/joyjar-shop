@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { currentMember } from '@/lib/auth';
-import { priceCart, newOrderNum, HITPAY_API } from '@/lib/orders';
+import { priceCart, newOrderNum, hitpay } from '@/lib/orders';
 import { discountOptions, applyDiscount } from '@/lib/discounts';
 import { pointsSummary, lockMember } from '@/lib/points';
 import { pointsFor } from '@/lib/club';
@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { cart, form = {}, region = "", date = "", pay = "paynow", discount = {} } = body || {};
 
-    const hitpayApiKey = process.env.HITPAY_API_KEY;
+    const hp = hitpay();
+    const hitpayApiKey = hp.key;
     if (!hitpayApiKey) {
       return NextResponse.json({ error: 'HitPay API key is missing' }, { status: 500 });
     }
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
     params.append('redirect_url', `${origin}/checkout/confirm?num=${encodeURIComponent(num)}`);
     params.append('webhook', `${origin}/api/hitpay-webhook`);
 
-    const response = await fetch(`${HITPAY_API}/payment-requests`, {
+    const response = await fetch(`${hp.api}/payment-requests`, {
       method: 'POST',
       headers: {
         'X-BUSINESS-API-KEY': hitpayApiKey,

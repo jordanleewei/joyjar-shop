@@ -17,7 +17,7 @@ export function PetShop({ st, onChange, wearing, onWear }: { st: PetState; onCha
     setBusy("");
     if (!res.ok) { setMsg({ ok: false, text: data.error || "Couldn't get that right now." }); return; }
     onChange(data);
-    setMsg({ ok: true, text: `${qty} ${label.toLowerCase()}${qty > 1 ? "s" : ""} added ✓ Pick it at the bottom of the pond to feed.` });
+    setMsg({ ok: true, text: `${label} added ✓ Pick it at the bottom of the pond to feed.` });
   };
 
   return (
@@ -37,10 +37,7 @@ export function PetShop({ st, onChange, wearing, onWear }: { st: PetState; onCha
             <span className="ps-emoji" aria-hidden="true">{t.emoji}</span>
             <strong>{t.en}</strong><small>{t.zh}</small>
             {st.treats[t.id] > 0 && <span className="ps-have">You have {st.treats[t.id]}</span>}
-            <div className="ps-buys">
-              <button type="button" className="ps-buy" data-nofish="1" disabled={st.balance < 1 || !!busy} onClick={() => buy(t.id, 1, t.en)}>{busy === t.id + 1 ? "…" : "+1 · 1 pt"}</button>
-              <button type="button" className="ps-buy is-quiet" data-nofish="1" disabled={st.balance < 5 || !!busy} onClick={() => buy(t.id, 5, t.en)}>{busy === t.id + 5 ? "…" : "×5"}</button>
-            </div>
+            <button type="button" className="ps-buy" data-nofish="1" disabled={st.balance < t.cost || !!busy} onClick={() => buy(t.id, 1, t.en)}>{busy === t.id + 1 ? "…" : `Buy · ${t.cost} pt`}</button>
           </div>
         ))}
       </div>

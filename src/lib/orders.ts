@@ -9,7 +9,17 @@ export function refreshShop() {
   try { revalidatePath("/"); revalidatePath("/cart"); revalidatePath("/product/[id]", "page"); } catch {}
 }
 
-export const HITPAY_API = process.env.HITPAY_API_URL || "https://api.sandbox.hit-pay.com/v1";
+// HitPay: sandbox (test payments) unless HITPAY_MODE=live in Vercel.
+// Sandbox uses HITPAY_API_KEY + HITPAY_SALT; live uses HITPAY_LIVE_API_KEY + HITPAY_LIVE_SALT.
+export function hitpay() {
+  const live = process.env.HITPAY_MODE === "live";
+  return {
+    live,
+    api: process.env.HITPAY_API_URL || (live ? "https://api.hit-pay.com/v1" : "https://api.sandbox.hit-pay.com/v1"),
+    key: (live ? process.env.HITPAY_LIVE_API_KEY : process.env.HITPAY_API_KEY) || "",
+    salt: (live ? process.env.HITPAY_LIVE_SALT : process.env.HITPAY_SALT) || "",
+  };
+}
 
 const clampQty = (n: any) => Math.max(1, Math.min(99, Math.floor(Number(n) || 0)));
 
@@ -94,9 +104,9 @@ export function newOrderNum() {
 }
 
 export async function hitpayStatus(paymentRequestId: string) {
-  const key = process.env.HITPAY_API_KEY;
+  const { key, api } = hitpay();
   if (!key) return null;
-  const res = await fetch(`${HITPAY_API}/payment-requests/${encodeURIComponent(paymentRequestId)}`, {
+  const res = await fetch(`${api}/payment-requests/${encodeURIComponent(paymentRequestId)}`, {
     headers: { "X-BUSINESS-API-KEY": key }, cache: "no-store",
   });
   if (!res.ok) return null;
@@ -106,7 +116,7 @@ export async function hitpayStatus(paymentRequestId: string) {
 
 // HitPay webhook signature: HMAC-SHA256 (salt) over keys sorted A→Z, each as key+value, excluding "hmac".
 export function verifyHitpayHmac(fields: Record<string, string>) {
-  const salt = process.env.HITPAY_SALT;
+  const { salt } = hitpay();
   if (!salt || !fields.hmac) return false;
   const msg = Object.keys(fields).filter((k) => k !== "hmac").sort().map((k) => k + (fields[k] ?? "")).join("");
   const want = crypto.createHmac("sha256", salt).update(msg).digest("hex");
