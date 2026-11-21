@@ -16,8 +16,16 @@ export function StockClient({ rows }: { rows: Row[] }) {
         </div>
       </div>
       <div className="stk-grid">
-        {rows.map((r) => <StockRow key={r.id} r={r} />)}
+        {rows.filter((r) => r.available).map((r) => <StockRow key={r.id} r={r} />)}
       </div>
+      {rows.some((r) => !r.available) && (
+        <details className="stk-hidden">
+          <summary>Hidden flavours ({rows.filter((r) => !r.available).length}) · not shown in the shop</summary>
+          <div className="stk-grid">
+            {rows.filter((r) => !r.available).map((r) => <StockRow key={r.id} r={r} />)}
+          </div>
+        </details>
+      )}
     </main>
   );
 }

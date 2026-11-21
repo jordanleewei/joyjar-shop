@@ -1552,3 +1552,5 @@ html{ scroll-padding-top:90px; }
   .lbl-a4 .lbl-sheet{ display:grid; }
   .lbl-a4 .lbl{ border:0; }
 }
+.stk-hidden{ margin-top:24px; }
+.stk-hidden summary{ cursor:pointer; font-size:14px; color:#766c5f; padding:8px 0 14px; }
