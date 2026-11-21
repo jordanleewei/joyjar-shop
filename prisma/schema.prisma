@@ -50,6 +50,9 @@ model Bundle {
   featured Boolean @default(false)
   note     String
   noteZh   String
+  blurb    String @default("") // description on its product page
+  blurbZh  String @default("")
+  imageVer Int    @default(0)  // 0 = no photo
 }
 
 model DeliveryConfig {

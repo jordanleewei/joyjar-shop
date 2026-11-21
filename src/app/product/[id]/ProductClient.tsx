@@ -22,7 +22,7 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
   const swatch = (p: any) => (TONES[p.tone] || {}).swatch || "#cdd9b4";
 
   const PACKS = [
-    { id: "box-mix", title: "Box of Six", sub: "Mix & Match", titleZh: "自选搭配", price: boxB.price },
+    { id: "box-mix", title: boxB.title || "Box of Six", sub: "Mix & Match", titleZh: "自选搭配", price: boxB.price },
     { id: "single", title: "Single Jar", sub: "One flavour", titleZh: "单瓶", price: (products.find((x: any) => x.id === initialProduct.id)?.price ?? singleB.price) as number }
   ];
 
@@ -73,11 +73,6 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
   const remaining = target - mixTotal;
 
   const inc = (id: string) => setMix((m) => mixTotal >= target ? m : { ...m, [id]: (m[id] || 0) + 1 });
-  const fillOneEach = () => setMix(() => {
-    const m: Record<string, number> = {};
-    products.filter((p: any) => !isSoldOut(p)).slice(0, target).forEach((p: any) => { m[p.id] = 1; });
-    return m;
-  });
   const dec = (id: string) => setMix((m) => ({ ...m, [id]: Math.max(0, (m[id] || 0) - 1) }));
 
   const doAdd = () => {
@@ -107,7 +102,9 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
                   ? <img className="pdp-photo" src={photoUrl(live)} alt={`${live.flavorEn} fish maw dessert`} />
                   : <Jar tone={live.tone} size={1.4} floating label="小胶傲" labelEn={live.cap} />}
               </React.Fragment> :
-              <GiftBox3D slots={slots} fill={packMode === "box-mix"} />
+              (boxB.imageVer > 0 && mixTotal === 0
+                ? <img className="pdp-photo" src={photoUrl(boxB)} alt={`${boxB.title || "Box of Six"}`} />
+                : <GiftBox3D slots={slots} fill={packMode === "box-mix"} />)
             }
           </div>
           <div className="pdp-info">
@@ -119,11 +116,11 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
                 <p className="pdp-blurb">{live.blurb}<br /><span className="pdp-blurb-zh">{live.blurbZh}</span></p>
               </React.Fragment> :
               <React.Fragment>
-                <h1 className="pdp-name">The Box of Six</h1>
-                <p className="pdp-zh">小胶傲 · 花胶自选礼盒</p>
+                <h1 className="pdp-name">{boxB.title || "Box of Six"}</h1>
+                <p className="pdp-zh">{boxB.titleZh || "花胶自选礼盒"}</p>
                 <p className="pdp-blurb">
-                  Six collagen-rich jars, gift-ready with free delivery.{" "}
-                  Pick any six. Mix and match your favourites, or start with one of each.
+                  {boxB.blurb || "Six collagen-rich jars, gift-ready with free delivery. Pick any six and mix and match your favourites."}
+                  {boxB.blurbZh && <><br /><span className="pdp-blurb-zh">{boxB.blurbZh}</span></>}
                 </p>
               </React.Fragment>
             }
@@ -164,7 +161,6 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
               <div className="opt-group">
                 <div className="mix-head">
                   <span className="opt-label">Choose six · 自选六瓶</span>
-                  <button type="button" className="link-quiet mix-fill" data-nofish="1" onClick={fillOneEach}>One of each · 各一瓶</button>
                   <span className={`mix-count ${mixTotal === target ? "is-done" : ""}`}>{mixTotal} / {target}</span>
                 </div>
                 <div className="mix-list">

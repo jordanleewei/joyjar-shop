@@ -10,8 +10,10 @@ const MAX = 2.5 * 1024 * 1024;
 export async function PUT(request: Request, { params }: Ctx) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
   const { id } = await params;
-  const p = await prisma.product.findUnique({ where: { id }, select: { imageVer: true } });
+  const p = (await prisma.product.findUnique({ where: { id }, select: { imageVer: true } }))
+    || (await prisma.bundle.findUnique({ where: { id }, select: { imageVer: true } }));
   if (!p) return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
+  const isBundle = !(await prisma.product.findUnique({ where: { id }, select: { id: true } }));
   const form = await request.formData().catch(() => null);
   const file = form?.get('photo');
   if (!file || typeof file === 'string') return NextResponse.json({ error: 'Please choose a photo.' }, { status: 400 });
@@ -19,7 +21,10 @@ export async function PUT(request: Request, { params }: Ctx) {
   if (file.size > MAX) return NextResponse.json({ error: 'That photo is too large. Try a smaller one.' }, { status: 400 });
   const data = Buffer.from(await file.arrayBuffer());
   await prisma.productImage.upsert({ where: { productId: id }, create: { productId: id, mime: file.type, data }, update: { mime: file.type, data } });
-  const updated = await prisma.product.update({ where: { id }, data: { imageVer: Math.max(1, p.imageVer + 1) } });
+  const imageVer = Math.max(1, p.imageVer + 1);
+  const updated = isBundle
+    ? await prisma.bundle.update({ where: { id }, data: { imageVer } })
+    : await prisma.product.update({ where: { id }, data: { imageVer } });
   refreshShop();
   return NextResponse.json({ ok: true, imageVer: updated.imageVer });
 }
@@ -29,6 +34,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   const { id } = await params;
   await prisma.productImage.deleteMany({ where: { productId: id } });
   await prisma.product.update({ where: { id }, data: { imageVer: 0 } }).catch(() => null);
+  await prisma.bundle.update({ where: { id }, data: { imageVer: 0 } }).catch(() => null);
   refreshShop();
   return NextResponse.json({ ok: true });
 }

@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ProductPhoto } from "@/components/ui/ProductPhoto";
+import { ProductPhoto, photoUrl } from "@/components/ui/ProductPhoto";
+import { GiftBox3D } from "@/components/ui/GiftBox3D";
 
 type Row = { id: string; flavorEn: string; flavorZh: string; name: string; tone: string; cap: string; imageVer: number; price: number | null; available: boolean; archived: boolean; stock: number | null; tagline: string };
 const money = (n: number) => "$" + Number(n).toFixed(2);
 
-export function ProductsClient({ rows, single, box }: { rows: Row[]; single: number; box: number }) {
+type BoxInfo = { id: string; title: string; titleZh: string; note: string; price: number; imageVer: number; qty: number } | null;
+
+export function ProductsClient({ rows, single, box, boxInfo }: { rows: Row[]; single: number; box: number; boxInfo: BoxInfo }) {
   const router = useRouter();
   const live = rows.filter((r) => !r.archived && r.available);
   const hidden = rows.filter((r) => !r.archived && !r.available);
@@ -31,7 +34,22 @@ export function ProductsClient({ rows, single, box }: { rows: Row[]; single: num
         <Link href="/admin/products/new" className="adm-btn adm-btn-link" data-nofish="1">+ Add product</Link>
       </div>
 
-      <Prices single={single} box={box} />
+      <Prices single={single} />
+
+      {boxInfo && <>
+        <h2 className="prd-divider">Gift box · 礼盒</h2>
+        <div className="prd-grid">
+          <Link href="/admin/products/box" className="prd-card" data-nofish="1">
+            <div className="prd-photo prd-photo-box">{boxInfo.imageVer > 0 ? <img src={photoUrl(boxInfo)} alt="" /> : <GiftBox3D caption={false} />}</div>
+            <div className="prd-body">
+              <strong>{boxInfo.title} <span>{boxInfo.titleZh}</span></strong>
+              <small>{boxInfo.note || `Any ${boxInfo.qty} jars, mix and match`}</small>
+              <span className="prd-price">{money(boxInfo.price)}<em> per box</em></span>
+            </div>
+            <span className="prd-edit">Edit →</span>
+          </Link>
+        </div>
+      </>}
 
       <h2 className="prd-divider">In the shop · 在售 <span>{live.length}</span></h2>
       {live.length === 0 && <div className="adm-empty">No products in the shop. Open one below and tick “Show in the shop”.</div>}
@@ -79,16 +97,15 @@ function Card({ r, single }: { r: Row; single: number }) {
   );
 }
 
-function Prices({ single, box }: { single: number; box: number }) {
+function Prices({ single }: { single: number }) {
   const router = useRouter();
   const [s, setS] = useState(single.toFixed(2));
-  const [b, setB] = useState(box.toFixed(2));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const dirty = Number(s) !== single || Number(b) !== box;
+  const dirty = Number(s) !== single;
   const save = async () => {
     setBusy(true); setMsg(null);
-    const res = await fetch("/api/admin/bundles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ single: s, box: b }) });
+    const res = await fetch("/api/admin/bundles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ single: s }) });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) { setMsg({ ok: false, text: data.error || "Couldn't save." }); return; }
@@ -96,13 +113,12 @@ function Prices({ single, box }: { single: number; box: number }) {
   };
   return (
     <section className="prd-prices">
-      <h2>Standard prices · 价格</h2>
+      <h2>Standard single-jar price · 单瓶价格</h2>
       <div className="prd-price-row">
         <label className="adm-field"><span>Single jar</span><div className="adm-money"><b>$</b><input inputMode="decimal" value={s} onChange={(e) => { setS(e.target.value); setMsg(null); }} /></div></label>
-        <label className="adm-field"><span>Box of Six (any mix)</span><div className="adm-money"><b>$</b><input inputMode="decimal" value={b} onChange={(e) => { setB(e.target.value); setMsg(null); }} /></div></label>
         <button type="button" className="adm-btn" data-nofish="1" disabled={!dirty || busy} onClick={save}>{busy ? "Saving…" : "Save prices"}</button>
       </div>
-      <p className="adm-muted">A flavour can also have its own single-jar price. Open it and fill in “Own price”.</p>
+      <p className="adm-muted">Used by every flavour unless it has its own price. The Box of Six price is set on the gift box below.</p>
       {msg && <p className={msg.ok ? "adm-ok-inline" : "adm-err"}>{msg.text}</p>}
     </section>
   );

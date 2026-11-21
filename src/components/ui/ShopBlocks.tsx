@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ProductPhoto } from "./ProductPhoto";
+import { ProductPhoto, photoUrl } from "./ProductPhoto";
 import Link from "next/link";
 import { Label, Btn, Wave } from "./components";
 import { Jar } from "./Jars";
@@ -61,6 +61,7 @@ export function BundleCard({ b, deliveryConfig }: any) {
   return (
     <div className={`bundle-card ${b.featured ? "is-featured" : ""}`}>
       {b.featured && <span className="ribbon">最超值 · Best Value</span>}
+      {b.imageVer > 0 && <div className="bundle-photo"><img src={photoUrl(b)} alt={b.title} loading="lazy" /></div>}
       <div className="bundle-top">
         <span className="bundle-zh">{b.titleZh}</span>
         <h3 className="bundle-title">{b.title}</h3>
