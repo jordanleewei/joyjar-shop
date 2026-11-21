@@ -81,7 +81,7 @@ export function Footer() {
           <Link href="/#shop">Shop</Link><Link href="/#kitchen">Our kitchen</Link>
           <Link href="/club">JoyJar Club</Link><Link href="/#faq">FAQ</Link>
         </nav>
-        <p className="footer-fine">Made fresh in Singapore · Self-delivered with care · PayNow &amp; cards via HitPay</p>
+        <p className="footer-fine">Made fresh in Singapore · Handled with care</p>
         <p className="footer-disclaimer">{DISCLAIMER}<br />{DISCLAIMER_ZH}</p>
       </div>
     </footer>
