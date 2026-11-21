@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
+import { ContactButtons } from "@/components/ui/Contact";
 import { formatDate } from "@/lib/dates";
 import { checkoutSwim } from "@/components/ui/Fish";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -56,7 +57,8 @@ function ConfirmContent() {
         <div className="confirm-card">
           <LogoMark size={104} style={{ margin: "0 auto 18px", display: "block" }} />
           <h1 className="confirm-title">{err}</h1>
-          <p className="confirm-note">If you were charged, message us on WhatsApp and we&apos;ll sort it out right away.</p>
+          <p className="confirm-note">If you were charged, message us and we&apos;ll sort it out right away.</p>
+          <ContactButtons message={`Hi JoyJar! About my order ${num}: `} subject={`JoyJar order ${num}`} />
           <Btn onClick={() => router.push("/")}>Back to shop · 回到首页</Btn>
         </div>
       </div>
@@ -90,9 +92,10 @@ function ConfirmContent() {
             <Link href="/club" className="link-quiet">Join the JoyJar Club</Link> for 5% off your first order and 1 point for every $1 you spend.
           </p>
         )}
-        {!paid && (
+        {!paid && (<>
           <p className="confirm-note">Still pending after a few minutes? Message us with your order number.</p>
-        )}
+          <ContactButtons message={`Hi JoyJar! About my order ${order.num}: `} subject={`JoyJar order ${order.num}`} />
+        </>)}
         <Btn onClick={() => router.push("/")}>Back to shop · 回到首页</Btn>
       </div>
     </div>

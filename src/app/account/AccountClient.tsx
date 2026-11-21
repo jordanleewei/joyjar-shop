@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { ContactButtons } from "@/components/ui/Contact";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components/layout/Shared";
@@ -211,7 +212,7 @@ export function AccountClient({ member, orders, perks, pet }: { member: any; ord
             </div>
           )}
 
-          {tab === "settings" && <Settings email={member.email} onLogout={logout} />}
+          {tab === "settings" && <Settings email={member.email} memberNoText={memberNo(member.num)} onLogout={logout} />}
         </div>
       </section>
 
@@ -221,7 +222,7 @@ export function AccountClient({ member, orders, perks, pet }: { member: any; ord
   );
 }
 
-function Settings({ email, onLogout }: { email: string; onLogout: () => void }) {
+function Settings({ email, memberNoText, onLogout }: { email: string; memberNoText: string; onLogout: () => void }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -260,7 +261,8 @@ function Settings({ email, onLogout }: { email: string; onLogout: () => void }) 
       </form>
       <div className="acct-panel">
         <h3 className="ck-h">Need help? · 帮助</h3>
-        <p className="muted">Questions about an order or your membership? Message us on WhatsApp with your member number.</p>
+        <p className="muted">Questions about an order or your membership? Message us with your member number ({memberNoText}).</p>
+        <ContactButtons message={`Hi JoyJar! My member number is ${memberNoText}. `} subject={`JoyJar member ${memberNoText}`} />
         <Link href="/#faq" className="link-quiet">Read the FAQ →</Link>
       </div>
     </div>

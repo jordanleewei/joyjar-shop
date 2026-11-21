@@ -106,9 +106,18 @@ export const FAQ = [
   { q:"What are the allergens?", qZh:"有什么过敏原？",
     a:"All jars contain milk, fish products, and wheat products containing gluten. Calm also contains tree nuts (almond). Check each flavour's full ingredient list before ordering if you have allergies." },
   { q:"The lid button was already up when I got it.", qZh:"收到时瓶盖按钮已经弹起？",
-    a:"Please don't eat it. That means the vacuum seal has broken. Message us with your order number and we'll sort it out." },
+    a:"Please don't eat it. That means the vacuum seal has broken. WhatsApp us at +65 8958 9009 or email joyjarsingapore@gmail.com with your order number and we'll sort it out." },
   { q:"How does delivery work?", qZh:"怎么配送？",
     a:"We deliver every jar ourselves, chilled, to all 5 regions of Singapore: Central, East, North, North-East and West. Delivery is free over $50, and we'll WhatsApp you to arrange a time." },
   { q:"What do JoyJar Club members get?", qZh:"会员有什么福利？",
     a:"Joining is free. You get 5% off your first order and design a member card with your own avatar and fish maw pet. Every $1 you spend earns 1 point, and each mission (like posting about JoyJar) earns 5 points. Collect 200, 400 and 600 points to move up from Pearl to Jade, Gold and Diamond. Trade 100 points for $5 off an order, or spend 1 point per treat for your pet. Pet accessories unlock free as your tier goes up. One discount per order." },
 ];
+
+// How customers reach us
+export const CONTACT = {
+  email: "joyjarsingapore@gmail.com",
+  whatsapp: "6589589009",          // for wa.me links
+  whatsappLabel: "+65 8958 9009",
+};
+export const waLink = (text = "") => `https://wa.me/${CONTACT.whatsapp}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+export const mailLink = (subject = "") => `mailto:${CONTACT.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`;

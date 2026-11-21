@@ -45,7 +45,7 @@ function layout(title: string, body: string, preheader = "") {
         ${body}
       </td></tr>
       <tr><td style="padding:16px 24px;background:#f6efe2;font-size:12px;color:#766c5f;line-height:1.6">
-        Questions? Just reply to this email or WhatsApp us with your order number.<br>
+        Questions? Reply to this email or WhatsApp us at <a href="https://wa.me/6589589009" style="color:#2f4a34">+65 8958 9009</a> with your order number.<br>
         小胶傲 JoyJar · Made fresh in Singapore · <a href="${SITE()}" style="color:#2f4a34">${SITE().replace(/^https?:\/\//, "")}</a>
       </td></tr>
     </table>
@@ -108,7 +108,7 @@ export async function sendStatusEmail(order: any, kind: "ship" | "done") {
       <p style="margin:0 0 6px;font-size:15px;line-height:1.6">Hi ${esc(first)}, your order <b>${esc(order.num)}</b> is packed and chilled. We'll deliver it ${when} and WhatsApp you before we arrive.</p>
       ${box(`<b>Delivering to</b><br>${addressHtml(c)}`)}
       ${box(`<b>In your order</b>${itemsHtml(lines)}`)}
-      <p style="font-size:13px;color:#766c5f">Not going to be home? Just reply to this email or WhatsApp us.</p>`,
+      <p style="font-size:13px;color:#766c5f">Not going to be home? Reply to this email or WhatsApp us at <a href="https://wa.me/6589589009" style="color:#2f4a34">+65 8958 9009</a>.</p>`,
       `Order ${order.num} is on the way`);
     const text = `Hi ${first}, your JoyJar order ${order.num} is packed and on the way. We'll deliver it ${date ? "on " + date : "soon"} and WhatsApp you before we arrive.\n\n${lines.join("\n")}`;
     await sendMail({ to: c.email, bcc: reply, subject: `Your JoyJar order ${order.num} is on the way${date ? ` · ${date}` : ""}`, html, text, replyTo: reply });

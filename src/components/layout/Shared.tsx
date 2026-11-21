@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { ContactButtons } from "../ui/Contact";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "../ui/Brand";
@@ -72,6 +73,10 @@ export function Footer() {
           <Logo compact />
         </Link>
         <p className="footer-zh">小胶傲 · JoyJar — 一罐花胶，满满胶傲</p>
+        <div className="footer-contact" id="contact">
+          <span className="footer-contact-label">Contact us · 联系我们</span>
+          <ContactButtons compact />
+        </div>
         <nav className="footer-nav">
           <Link href="/#shop">Shop</Link><Link href="/#kitchen">Our kitchen</Link>
           <Link href="/club">JoyJar Club</Link><Link href="/#faq">FAQ</Link>

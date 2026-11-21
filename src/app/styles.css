@@ -1617,3 +1617,18 @@ a.prd-card:hover{ border-color:#2f4a34; transform:translateY(-1px); }
 .prd-photo-box .gb3, .prd-photo-big .gb3{ transform:scale(.55); transform-origin:center; }
 .bundle-photo{ margin:-34px -32px 18px; height:200px; overflow:hidden; border-radius:18px 18px 0 0; }
 .bundle-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+/* ---------- Contact ---------- */
+.contact-btns{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.contact-btn{ display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:9px 16px; border-radius:999px; text-decoration:none; font-size:14px; border:1.5px solid currentColor; transition:transform .15s, background .15s; max-width:100%; }
+.contact-btn span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.contact-btn b{ font-weight:600; }
+.contact-btn:hover{ transform:translateY(-1px); }
+.contact-wa{ background:#25d366; border-color:#25d366; color:#0b3d1f; }
+.contact-mail{ color:var(--ink); background:var(--paper); border-color:var(--hair-strong); }
+.faq-contact{ justify-content:center; }
+.footer-contact{ display:flex; flex-direction:column; align-items:center; gap:4px; margin:6px 0 4px; }
+.footer-contact-label{ font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:#e3c27a; }
+.footer-contact .contact-btns{ justify-content:center; margin:6px 0; }
+.footer-contact .contact-mail{ background:transparent; color:#f6efe2; border-color:rgba(246,239,226,.45); }
+@media (max-width:420px){ .contact-btn{ font-size:13px; padding:8px 13px; } }

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { ContactButtons } from "@/components/ui/Contact";
+import { CONTACT } from "@/lib/constants";
 import { ProductPhoto } from "@/components/ui/ProductPhoto";
 import Link from "next/link";
 import { Label, Btn } from "@/components/ui/components";
@@ -265,7 +267,7 @@ export function PopSection() {
           <ol className="pop-steps">
             <li><strong>Look.</strong> The button in the middle of the lid should be pressed down. That means the vacuum seal is perfect.</li>
             <li><strong>Twist &amp; listen.</strong> You&apos;ll hear a crisp &ldquo;POP!&rdquo; as the button springs up. That&apos;s your opening ceremony.</li>
-            <li><strong>Button already up before you open?</strong> Don&apos;t eat it. Message us with your order number and we&apos;ll sort it out.</li>
+            <li><strong>Button already up before you open?</strong> Don&apos;t eat it. WhatsApp us at {CONTACT.whatsappLabel} with your order number and we&apos;ll sort it out.</li>
           </ol>
         </div>
         <div className="pop-stage">
@@ -324,7 +326,8 @@ export function Faq() {
       <div className="wrap faq-inner">
         <div className="section-head">
           <Label zh="问答">FAQ</Label>
-          <p className="section-lede">Something else on your mind? Message us on WhatsApp after you order and we&apos;ll get back to you.</p>
+          <p className="section-lede">Something else on your mind? WhatsApp or email us and we&apos;ll get back to you.</p>
+          <ContactButtons message="Hi JoyJar! I have a question: " subject="Question for JoyJar" className="faq-contact" />
         </div>
         <div className="faq-list">
           {FAQ.map((f, i) => (
