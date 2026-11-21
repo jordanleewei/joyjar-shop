@@ -14,6 +14,7 @@ export function AdminBar() {
         <nav className="adm-nav">
           <Link href="/admin" data-nofish="1" className={path === "/admin" ? "is-on" : ""}>Orders · 订单</Link>
           <Link href="/admin/stock" data-nofish="1" className={path === "/admin/stock" ? "is-on" : ""}>Stock · 库存</Link>
+          <Link href="/admin/settings" data-nofish="1" className={path === "/admin/settings" ? "is-on" : ""}>Settings · 设置</Link>
           <a href="/" target="_blank" rel="noreferrer" data-nofish="1">View shop ↗</a>
           <button type="button" data-nofish="1" onClick={logout}>Log out</button>
         </nav>

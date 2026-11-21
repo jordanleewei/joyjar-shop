@@ -131,3 +131,10 @@ model PetPurchase {
 
   @@index([memberId])
 }
+
+// Small key/value settings (e.g. the admin password hash, set from /admin/settings).
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

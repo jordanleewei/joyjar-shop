@@ -1556,3 +1556,5 @@ html{ scroll-padding-top:90px; }
 .stk-hidden summary{ cursor:pointer; font-size:14px; color:#766c5f; padding:8px 0 14px; }
 .adm-day{ min-height:42px; border:1px solid rgba(70,52,28,.26); border-radius:999px; padding:8px 14px; font:inherit; font-size:14px; background:#fff; }
 .adm-date{ font-weight:700; font-size:14px; background:#f6efe2; border-radius:999px; padding:3px 10px; }
+.adm-settings{ width:min(480px,100%); box-shadow:none; border:1px solid rgba(70,52,28,.14); }
+.adm-settings h2{ font-size:19px; margin:0; }
