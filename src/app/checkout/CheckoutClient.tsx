@@ -16,7 +16,7 @@ import { REGIONS, regionFromPostal } from "@/lib/regions";
 import { deliveryDates, dateParts, formatDate } from "@/lib/dates";
 
 
-function Field({ id, label, zh, value, onChange, onBlur, placeholder, type = "text", wide, required, optional, error, inputMode, autoComplete }: any) {
+function Field({ id, label, zh, value, onChange, onBlur, placeholder, type = "text", wide, required, optional, error, inputMode, autoComplete, hint }: any) {
   return (
     <label className={`field ${wide ? "field-wide" : ""} ${error ? "is-error" : ""} ${value && !error ? "is-ok" : ""}`} htmlFor={id}>
       <span className="field-label">
@@ -27,6 +27,7 @@ function Field({ id, label, zh, value, onChange, onBlur, placeholder, type = "te
         aria-required={required || undefined} aria-invalid={!!error || undefined} aria-describedby={error ? `${id}-err` : undefined}
         onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
       {error && <span className="field-err" id={`${id}-err`}>{error}</span>}
+      {hint && !error && <span className="field-hint">{hint}</span>}
     </label>
   );
 }
@@ -172,7 +173,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
               <div className="field-grid">
                 <Field id="f-name" label="Full name" zh="姓名" value={form.name} onChange={set("name")} onBlur={blur("name")} placeholder="JoyJar" required error={err("name")} autoComplete="name" />
                 <Field id="f-phone" label="Phone" zh="电话" value={form.phone} onChange={set("phone")} onBlur={blur("phone")} placeholder="+65 8123 4567" type="tel" inputMode="tel" required error={err("phone")} autoComplete="tel" />
-                <Field id="f-email" label="Email" zh="邮箱" value={form.email} onChange={set("email")} onBlur={blur("email")} placeholder="joyjar@email.com" type="email" wide optional error={err("email")} autoComplete="email" />
+                <Field id="f-email" label="Email" zh="邮箱" value={form.email} onChange={set("email")} onBlur={blur("email")} placeholder="joyjar@email.com" type="email" wide optional hint="For your order confirmation and delivery updates" error={err("email")} autoComplete="email" />
               </div>
             </section>
 

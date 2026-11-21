@@ -94,7 +94,9 @@ model Order {
   pointsUsed      Int      @default(0)       // points redeemed on this order
   pointsEarned    Int      @default(0)       // points this order earns once paid
   stockApplied    Boolean  @default(false)
-  notified        Boolean  @default(false)
+  notified        Boolean  @default(false)  // shop alert + customer confirmation sent
+  mailShip        Boolean  @default(false)  // "on its way" email sent
+  mailDone        Boolean  @default(false)  // "delivered" email sent
   createdAt       DateTime @default(now())
 
   @@index([status, createdAt])

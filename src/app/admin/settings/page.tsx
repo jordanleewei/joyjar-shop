@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import { AdminBar } from "../AdminBar";
 import { SettingsClient } from "./SettingsClient";
+import { mailProvider, shopInbox } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function AdminSettingsPage() {
   return (
     <>
       <AdminBar />
-      <SettingsClient />
+      <SettingsClient email={{ provider: mailProvider(), from: process.env.GMAIL_USER || process.env.EMAIL_FROM || "", inbox: shopInbox() }} />
     </>
   );
 }

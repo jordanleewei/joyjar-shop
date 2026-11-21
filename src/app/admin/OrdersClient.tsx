@@ -68,6 +68,8 @@ export function OrdersClient({ paid, unpaid }: { paid: AdminOrder[]; unpaid: Adm
     const res = await fetch("/api/admin/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nums, ...data }) });
     setBusy(false);
     if (!res.ok) { setMsg("Couldn't save that. Please try again."); return; }
+    const out = await res.json().catch(() => ({}));
+    if (out.emailed) note += ` · ${out.emailed} customer${out.emailed === 1 ? "" : "s"} emailed`;
     setOrders((list) => list.map((o) => nums.includes(o.num) ? { ...o, ...data } as AdminOrder : o));
     if (data.fulfil) setSel(new Set());
     setMsg(note);

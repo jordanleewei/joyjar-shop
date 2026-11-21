@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isAdmin } from '@/lib/admin';
 import { REGIONS } from '@/lib/regions';
+import { sendStatusEmail } from '@/lib/email';
+import { mailProvider } from '@/lib/mailer';
 
 const FULFIL = ['new', 'packed', 'delivered'];
 
@@ -16,5 +18,19 @@ export async function PATCH(request: Request) {
   if (typeof body.region === 'string' && (body.region === '' || REGIONS.some((r) => r.id === body.region))) data.region = body.region;
   if (!Object.keys(data).length) return NextResponse.json({ error: 'Nothing to change.' }, { status: 400 });
   const res = await prisma.order.updateMany({ where: { num: { in: nums } }, data });
-  return NextResponse.json({ ok: true, updated: res.count });
+
+  // email customers once: "on its way" when packed, "delivered" when delivered
+  let emailed = 0;
+  if ((data.fulfil === 'packed' || data.fulfil === 'delivered') && mailProvider()) {
+    const flag = data.fulfil === 'packed' ? 'mailShip' : 'mailDone';
+    const kind = data.fulfil === 'packed' ? 'ship' : 'done';
+    const orders = await prisma.order.findMany({ where: { num: { in: nums }, status: 'paid', [flag]: false } });
+    for (const o of orders) {
+      const claim = await prisma.order.updateMany({ where: { id: o.id, [flag]: false }, data: { [flag]: true } });
+      if (!claim.count) continue;
+      try { if (await sendStatusEmail(o, kind)) emailed++; }
+      catch (e) { console.error('status email failed', o.num, e); await prisma.order.update({ where: { id: o.id }, data: { [flag]: false } }); }
+    }
+  }
+  return NextResponse.json({ ok: true, updated: res.count, emailed });
 }
