@@ -110,5 +110,5 @@ export const FAQ = [
   { q:"How does delivery work?", qZh:"怎么配送？",
     a:"We deliver every jar ourselves, chilled, to all 5 regions of Singapore: Central, East, North, North-East and West. Delivery is free over $50, and we'll WhatsApp you to arrange a time." },
   { q:"What do JoyJar Club members get?", qZh:"会员有什么福利？",
-    a:"Joining is free. You get 5% off your first order and design a member card with your own avatar and fish maw pet. Every $1 you spend earns 1 point, and each mission (like posting about JoyJar) earns 5 points. Collect 200, 400 and 600 points to move up from Pearl to Jade, Gold and Diamond. Trade 100 points for $5 off an order, or spend them on treats and accessories for your pet. One discount per order." },
+    a:"Joining is free. You get 5% off your first order and design a member card with your own avatar and fish maw pet. Every $1 you spend earns 1 point, and each mission (like posting about JoyJar) earns 5 points. Collect 200, 400 and 600 points to move up from Pearl to Jade, Gold and Diamond. Trade 100 points for $5 off an order, or spend 1 point per treat for your pet. Pet accessories unlock free as your tier goes up. One discount per order." },
 ];

@@ -5,21 +5,21 @@ export type Tier = {
   id: string; en: string; zh: string;
   min: number;        // lifetime points needed to reach this tier
   perks: string[];
-  unlocks: string[];  // pet accessories this tier lets you buy in the pet shop
+  unlocks: string[];  // pet accessories this tier unlocks (free once unlocked)
 };
 
 export const TIERS: Tier[] = [
   { id: "pearl",   en: "Pearl",   zh: "珍珠", min: 0,
-    perks: ["5% welcome discount on your first order", "1 point for every $1 you spend", "5 points for every mission", "Pet shop: bow, flower, cap"],
+    perks: ["5% welcome discount on your first order", "1 point for every $1 you spend", "5 points for every mission", "Pet accessories: bow, flower, cap"],
     unlocks: ["none", "bow", "flower", "cap"] },
   { id: "jade",    en: "Jade",    zh: "翡翠", min: 200,
-    perks: ["Jade badge on your member card", "Pet shop: leaf, glasses, bow tie"],
+    perks: ["Jade badge on your member card", "Unlocks pet accessories: leaf, glasses, bow tie"],
     unlocks: ["leaf", "glasses", "bowtie"] },
   { id: "gold",    en: "Gold",    zh: "黄金", min: 400,
-    perks: ["Gold badge on your member card", "Pet shop: star, chef hat, headphones"],
+    perks: ["Gold badge on your member card", "Unlocks pet accessories: star, chef hat, headphones"],
     unlocks: ["star", "chef", "headphones"] },
   { id: "diamond", en: "Diamond", zh: "钻石", min: 600,
-    perks: ["Diamond badge on your member card", "Pet shop: crown, tiara, halo"],
+    perks: ["Diamond badge on your member card", "Unlocks pet accessories: crown, tiara, halo"],
     unlocks: ["crown", "tiara", "halo"] },
 ];
 
@@ -122,7 +122,7 @@ export const PET_COLOURS = [
   { id: "pink",  fill: "#f4b7c2", shade: "#d48691" },
   { id: "green", fill: "#c4dca6", shade: "#88ad6a" },
 ];
-// cost = points in the pet shop. "none" and the bow are free for everyone.
+// Accessories unlock with your tier and are free once unlocked.
 export const ACCESSORIES = [
   { id: "none", en: "None", cost: 0 },
   { id: "bow", en: "🎀 Bow", cost: 0 }, { id: "flower", en: "🌸 Flower", cost: 20 }, { id: "cap", en: "🧢 Cap", cost: 20 },
@@ -130,14 +130,14 @@ export const ACCESSORIES = [
   { id: "star", en: "⭐ Star", cost: 80 }, { id: "chef", en: "👨‍🍳 Chef hat", cost: 80 }, { id: "headphones", en: "🎧 Headphones", cost: 100 },
   { id: "crown", en: "👑 Crown", cost: 150 }, { id: "tiara", en: "💎 Tiara", cost: 150 }, { id: "halo", en: "😇 Halo", cost: 200 },
 ];
-export const FREE_ACCESSORIES = ACCESSORIES.filter((a) => a.cost === 0).map((a) => a.id);
+export const FREE_ACCESSORIES = TIERS[0].unlocks; // what every new member starts with
 
-// treats to feed your pet (bought in packs, eaten one at a time)
+// treats to feed your pet: 1 point each
 export const TREATS = [
-  { id: "shrimp", emoji: "🦐", en: "Shrimp snacks", zh: "虾虾零食", pack: 5, cost: 5 },
-  { id: "pudding", emoji: "🍮", en: "Mini puddings", zh: "迷你布丁", pack: 3, cost: 6 },
-  { id: "mooncake", emoji: "🥮", en: "Mooncakes", zh: "月饼", pack: 2, cost: 8 },
-  { id: "cake", emoji: "🍰", en: "Party cake", zh: "派对蛋糕", pack: 1, cost: 10 },
+  { id: "shrimp", emoji: "🦐", en: "Shrimp snack", zh: "虾虾零食", pack: 1, cost: 1 },
+  { id: "pudding", emoji: "🍮", en: "Mini pudding", zh: "迷你布丁", pack: 1, cost: 1 },
+  { id: "mooncake", emoji: "🥮", en: "Mooncake", zh: "月饼", pack: 1, cost: 1 },
+  { id: "cake", emoji: "🍰", en: "Party cake", zh: "派对蛋糕", pack: 1, cost: 1 },
 ];
 
 export type CardDesign = {

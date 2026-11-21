@@ -163,7 +163,7 @@ export function AccountClient({ member, orders, perks, pet }: { member: any; ord
             <div className="acct-split">
               <div>
                 <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={400} treats={petSt.treats} onTreat={feedTreat} />
-                <p className="muted small" style={{ marginTop: 10 }}>{petSt.owned.length - 1} of {ACCESSORIES.length - 1} accessories collected{TREATS.some((x) => petSt.treats[x.id] > 0) ? " · pick a treat at the bottom of the pond to feed it" : ""}</p>
+                <p className="muted small" style={{ marginTop: 10 }}>{petSt.owned.length - 1} of {ACCESSORIES.length - 1} accessories unlocked{TREATS.some((x) => petSt.treats[x.id] > 0) ? " · pick a treat at the bottom of the pond to feed it" : ""}</p>
                 <div className="acct-panel" style={{ marginTop: 18 }}>
                   <Label zh="我的宠物">Your fish maw pet</Label>
                   <CardDesigner d={card} onChange={(d) => { setCard(d); setStatus(""); }} tierIndex={t.index} only="pet" owned={petSt.owned} />
@@ -279,7 +279,7 @@ function PerksPanel({ tierIndex, balance, owned, welcome, onMissions, onPet }: {
       ? { k: "welcome", icon: "%", title: "5% off your first order", sub: "Welcome gift, pick it at checkout" }
       : { k: "welcome", icon: "%", title: "Welcome gift used", sub: "Thanks for your first order 💛", dim: true },
     { k: "missions", icon: "📸", title: `${MISSION_POINTS} points per mission`, sub: "Post about JoyJar or recommend a friend", action: onMissions, actionLabel: "See missions" },
-    { k: "pet", icon: "🐟", title: `${owned.length - 1} of ${ACCESSORIES.length - 1} accessories`, sub: "Treats and accessories in the pet shop", action: onPet, actionLabel: "Pet shop" },
+    { k: "pet", icon: "🐟", title: `${owned.length - 1} of ${ACCESSORIES.length - 1} accessories unlocked`, sub: "Free with your tier · treats are 1 point each", action: onPet, actionLabel: "My pet" },
   ];
   return (
     <div className="acct-panel perks-panel">
@@ -303,7 +303,7 @@ function PerksPanel({ tierIndex, balance, owned, welcome, onMissions, onPet }: {
           <span className="perk-next-label">Next: {next.zh} · {next.en} at {next.min} pts</span>
           <div className="perk-next-chips">
             <span>{next.en} badge</span>
-            <span>{next.unlocks.map(icon).join(" ")} in the pet shop</span>
+            <span>{next.unlocks.map(icon).join(" ")} accessories unlocked free</span>
           </div>
         </div>
       ) : (

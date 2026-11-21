@@ -178,7 +178,7 @@ export function ClubClient({ member, orders, owned }: { member: any; orders: any
           <div>
             <Label zh="你的宠物">Meet your fish maw pet</Label>
             <h2 className="section-title">Say hi to <em>{card.petName}</em>.</h2>
-            <p className="section-lede">Every member gets a little fish maw pet. Feed it, play with it, rename it, and dress it up. Spend your points in the pet shop on treats and accessories. Fancier ones unlock as you move up from Pearl to Diamond.</p>
+            <p className="section-lede">Every member gets a little fish maw pet. Feed it, play with it, rename it, and dress it up. Treats are 1 point each, and accessories unlock free as you move up from Pearl to Diamond.</p>
             <ul className="pond-perks">
               <li><b>Pearl</b> 🎀 🌸 🧢</li><li><b>Jade</b> 🌿 👓 🤵</li><li><b>Gold</b> ⭐ 👨‍🍳 🎧</li><li><b>Diamond</b> 👑 💎 😇</li>
             </ul>

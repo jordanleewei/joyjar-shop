@@ -105,18 +105,17 @@ export function CardDesigner({ d, onChange, tierIndex = 0, only, owned = FREE_AC
               {ACCESSORIES.map((a) => {
                 const ok = owned.includes(a.id);
                 const need = tierOfAccessory(a.id);
-                const tierLocked = need > tierIndex;
                 return (
                   <button key={a.id} type="button" data-nofish="1" disabled={!ok}
-                    title={ok ? a.en : tierLocked ? `Unlocks at ${TIERS[need]?.en}` : `${a.cost} points in the pet shop`}
+                    title={ok ? a.en : `Unlocks at ${TIERS[need]?.en}`}
                     className={`chip ${d.accessory === a.id ? "is-on" : ""} ${ok ? "" : "is-locked"}`}
                     onClick={() => ok && set({ accessory: a.id })}>
-                    {a.en}{!ok && <small>{tierLocked ? `🔒 ${TIERS[need]?.en}` : `${a.cost} pts`}</small>}
+                    {a.en}{!ok && <small>🔒 {TIERS[need]?.en}</small>}
                   </button>
                 );
               })}
             </div>
-            <p className="cd-hint">Get more accessories with points in the pet shop. Fancier ones unlock at higher tiers.</p>
+            <p className="cd-hint">More accessories unlock free as you move up from Pearl to Diamond.</p>
           </div>
         </div>
       )}

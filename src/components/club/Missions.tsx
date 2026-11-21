@@ -114,7 +114,7 @@ export function MissionsPanel() {
       <div className="missions-head">
         <div>
           <h3 className="ck-h">Missions · 任务</h3>
-          <p className="muted">Each approved mission earns you <strong>{MISSION_POINTS} points</strong>. Points help you move up a tier, and you can trade {REDEEM_BLOCK} points for <strong>${REDEEM_VALUE} off</strong> or spend them in the pet shop.</p>
+          <p className="muted">Each approved mission earns you <strong>{MISSION_POINTS} points</strong>. Points help you move up a tier, and you can trade {REDEEM_BLOCK} points for <strong>${REDEEM_VALUE} off</strong> or on treats for your pet.</p>
         </div>
         <div className="voucher-pill"><b>{state?.points ?? "–"}</b><span>points</span></div>
       </div>

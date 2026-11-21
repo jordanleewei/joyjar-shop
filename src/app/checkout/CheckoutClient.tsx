@@ -285,8 +285,8 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
             </div>
             {opts && (opts.welcome || opts.points > 0) && (
               <div className="disc-box">
-                <div className="disc-head"><strong>Member savings · 会员优惠</strong><span>{opts.points} pts</span></div>
-                <p className="disc-note">Choose one per order.</p>
+                <div className="disc-head"><strong>Member savings · 会员优惠</strong><span>You have {opts.points} pts</span></div>
+                <p className="disc-note">Points are only used if you choose to redeem them. One saving per order.</p>
                 <label className="disc-row">
                   <input type="radio" name="disc" checked={discKind === "none"} onChange={() => setDiscKind("none")} />
                   <span>No discount this time</span><b></b>
@@ -299,7 +299,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
                 )}
                 <label className={`disc-row ${canBlocks ? "" : "is-over"}`}>
                   <input type="radio" name="disc" disabled={!canBlocks} checked={discKind === "points"} onChange={() => setDiscKind("points")} />
-                  <span>{canBlocks ? `Use points · ${REDEEM_BLOCK} pts = ${priceStr(REDEEM_VALUE)} off` : `Use points (${Math.max(0, REDEEM_BLOCK - opts.points)} more to unlock ${priceStr(REDEEM_VALUE)} off)`}</span>
+                  <span>{canBlocks ? `Redeem points · ${REDEEM_BLOCK} pts = ${priceStr(REDEEM_VALUE)} off` : `Redeem points (${Math.max(0, REDEEM_BLOCK - opts.points)} more to unlock ${priceStr(REDEEM_VALUE)} off)`}</span>
                   <b>{discKind === "points" && applied.kind === "points" ? `−${priceStr(applied.amount)}` : ""}</b>
                 </label>
                 {discKind === "points" && canBlocks > 1 && (

@@ -1,7 +1,7 @@
 // Points ledger, worked out from orders, missions and pet-shop purchases (no separate balance to drift).
 import { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "./db";
-import { MISSION_POINTS, ACCESSORIES, FREE_ACCESSORIES, TREATS } from "./club";
+import { MISSION_POINTS, TREATS, unlockedAccessories } from "./club";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 export const HOLD_MS = 2 * 60 * 60 * 1000; // points on an unpaid order are held for 2h, then freed
@@ -30,18 +30,17 @@ export function parsePetState(raw: string) {
   catch { return { fed: {} as Record<string, number> }; }
 }
 
-// What the member owns: accessories and treats left.
-export async function petInventory(memberId: string, petStateRaw?: string, db: Db = prisma) {
+// Accessories unlocked by tier (free) and treats left to feed.
+export async function petInventory(memberId: string, petStateRaw?: string, db: Db = prisma, tierIndex = 0) {
   const [buys, member] = await Promise.all([
     db.petPurchase.findMany({ where: { memberId }, select: { item: true } }),
     petStateRaw === undefined ? db.member.findUnique({ where: { id: memberId }, select: { petState: true } }) : null,
   ]);
   const state = parsePetState(petStateRaw ?? member?.petState ?? "{}");
-  const owned = new Set<string>(FREE_ACCESSORIES);
+  const owned = new Set<string>(unlockedAccessories(tierIndex));
   const bought: Record<string, number> = {};
   for (const b of buys) {
-    if (ACCESSORIES.some((a) => a.id === b.item)) owned.add(b.item);
-    else if (b.item.startsWith("treat:")) { const id = b.item.slice(6); bought[id] = (bought[id] || 0) + 1; }
+    if (b.item.startsWith("treat:")) { const id = b.item.slice(6); bought[id] = (bought[id] || 0) + 1; }
   }
   const treats: Record<string, number> = {};
   for (const t of TREATS) treats[t.id] = Math.max(0, (bought[t.id] || 0) * t.pack - (state.fed[t.id] || 0));

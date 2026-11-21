@@ -18,7 +18,7 @@ export default async function AccountPage() {
       orderBy: { createdAt: "desc" }, take: 20,
     }),
     prisma.order.count({ where: { memberId: member.id, status: "paid" } }),
-    petInventory(member.id, member.petState),
+    petInventory(member.id, member.petState, undefined, member.tierIndex),
   ]);
   const orders = rows.map((o) => ({
     num: o.num, total: o.total, discount: o.discount, status: o.status, pointsEarned: o.pointsEarned,
