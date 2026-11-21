@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { photoUrl } from "@/components/ui/ProductPhoto";
 import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components/layout/Shared";
 import { Label, Btn, QtyStepper } from "@/components/ui/components";
@@ -22,7 +23,7 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
 
   const PACKS = [
     { id: "box-mix", title: "Box of Six", sub: "Mix & Match", titleZh: "自选搭配", price: boxB.price },
-    { id: "single", title: "Single Jar", sub: "One flavour", titleZh: "单瓶", price: singleB.price }
+    { id: "single", title: "Single Jar", sub: "One flavour", titleZh: "单瓶", price: (products.find((x: any) => x.id === initialProduct.id)?.price ?? singleB.price) as number }
   ];
 
   const initMode = initialBundle && initialBundle.qty > 1 ? "box-mix" : "single";
@@ -64,7 +65,9 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
     for (let i = 0; i < target; i++) slots.push(picked[i] || null);
   }
 
-  const price = packMode === "single" ? singleB.price * qty : boxB.price;
+  const jarPrice = live.price != null ? live.price : singleB.price;
+  PACKS[1].price = jarPrice;
+  const price = packMode === "single" ? jarPrice * qty : boxB.price;
   const liveOut = isSoldOut(live);
   const canAdd = packMode === "single" ? !liveOut : mixTotal === target;
   const remaining = target - mixTotal;
@@ -100,7 +103,9 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
             {packMode === "single" ?
               <React.Fragment>
                 <div className="hero-halo" />
-                <Jar tone={live.tone} size={1.4} floating label="小胶傲" labelEn={live.cap} />
+                {live.imageVer > 0
+                  ? <img className="pdp-photo" src={photoUrl(live)} alt={`${live.flavorEn} fish maw dessert`} />
+                  : <Jar tone={live.tone} size={1.4} floating label="小胶傲" labelEn={live.cap} />}
               </React.Fragment> :
               <GiftBox3D slots={slots} fill={packMode === "box-mix"} />
             }

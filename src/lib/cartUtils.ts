@@ -5,7 +5,8 @@ export function lineFor(item: any, products: any[], bundles: any[]) {
   }
   const p = products.find((x) => x.id === item.productId);
   const b = bundles.find((x) => x.id === item.bundleId);
-  const price = b ? b.price : 0;
+  // a flavour can have its own single-jar price; otherwise the standard one
+  const price = b ? (b.qty === 1 && p && p.price != null ? p.price : b.price) : 0;
   return { p, b, total: price * item.qty };
 }
 

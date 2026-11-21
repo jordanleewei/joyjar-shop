@@ -1558,3 +1558,48 @@ html{ scroll-padding-top:90px; }
 .adm-date{ font-weight:700; font-size:14px; background:#f6efe2; border-radius:999px; padding:3px 10px; }
 .adm-settings{ width:min(480px,100%); box-shadow:none; border:1px solid rgba(70,52,28,.14); }
 .adm-settings h2{ font-size:19px; margin:0; }
+
+/* ---------- Admin products ---------- */
+.adm-btn-link{ display:inline-flex; align-items:center; text-decoration:none; }
+.adm-back{ display:inline-block; color:#766c5f; text-decoration:none; font-size:14px; margin-bottom:8px; }
+.adm-hint{ font-weight:400; color:#766c5f; font-size:12px; }
+.adm-field em{ font-style:normal; font-weight:400; color:#766c5f; font-family:var(--font-zh); }
+.adm-field textarea, .adm-field input:not([type=checkbox]){ min-height:42px; border:1px solid rgba(70,52,28,.26); border-radius:10px; padding:8px 12px; font:inherit; font-size:15px; font-weight:400; background:#fff; width:100%; box-sizing:border-box; }
+.adm-field textarea{ resize:vertical; line-height:1.45; }
+.adm-money{ display:flex; align-items:center; gap:6px; }
+.adm-money b{ font-size:16px; }
+.adm-money input{ max-width:140px; }
+.prd-prices{ background:#fff; border:1px solid rgba(70,52,28,.14); border-radius:16px; padding:16px; margin-bottom:18px; }
+.prd-prices h2, .prd-sec h2{ font-size:18px; margin:0 0 10px; }
+.prd-price-row{ display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; }
+.prd-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr)); gap:14px; }
+.prd-card{ display:flex; flex-direction:column; gap:10px; background:#fff; border:1px solid rgba(70,52,28,.14); border-radius:16px; padding:14px; color:inherit; text-decoration:none; transition:border-color .15s, transform .15s; }
+a.prd-card:hover{ border-color:#2f4a34; transform:translateY(-1px); }
+.prd-card.is-hidden{ opacity:.75; }
+.prd-photo{ height:150px; display:flex; align-items:center; justify-content:center; background:#f6efe2; border-radius:12px; overflow:hidden; }
+.prd-photo img{ width:100%; height:100%; object-fit:cover; }
+.prd-body{ display:flex; flex-direction:column; gap:3px; align-items:flex-start; }
+.prd-body strong{ font-size:17px; } .prd-body strong span{ font-family:var(--font-zh); font-weight:500; color:#766c5f; }
+.prd-body small{ color:#766c5f; }
+.prd-price{ font-weight:700; } .prd-price em{ font-style:normal; font-weight:400; font-size:12px; color:#766c5f; }
+.prd-edit{ font-size:13.5px; font-weight:600; color:#2f4a34; margin-top:auto; }
+.prd-form{ display:flex; flex-direction:column; gap:14px; }
+.prd-sec{ background:#fff; border:1px solid rgba(70,52,28,.14); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.prd-two{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; }
+.prd-photo-edit{ display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+.prd-photo-big{ width:200px; height:200px; border-radius:14px; background:#f6efe2; display:flex; align-items:center; justify-content:center; overflow:hidden; flex:none; }
+.prd-photo-big img{ width:100%; height:100%; object-fit:cover; }
+.prd-photo-actions{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; flex:1 1 220px; }
+.prd-tones{ display:flex; flex-wrap:wrap; gap:8px; }
+.prd-tone{ display:flex; align-items:center; gap:6px; border:1px solid rgba(70,52,28,.2); background:#fbf9f5; border-radius:999px; padding:6px 12px 6px 6px; font:inherit; font-size:13px; cursor:pointer; min-height:36px; }
+.prd-tone i{ width:22px; height:22px; border-radius:50%; border:2px solid; }
+.prd-tone.is-on{ border-color:#2f4a34; box-shadow:0 0 0 1px #2f4a34 inset; background:#fff; }
+.prd-savebar{ position:sticky; bottom:0; display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:#fff; border:1px solid rgba(70,52,28,.14); border-radius:16px; padding:12px 16px; box-shadow:0 -10px 30px -20px rgba(0,0,0,.3); }
+.prd-show{ font-size:15px; }
+.prd-remove{ margin-left:auto; color:#b34a30; }
+.product-photo{ width:100%; height:100%; object-fit:cover; display:block; border-radius:14px; }
+.flav-jar .product-photo{ aspect-ratio:1; max-height:240px; }
+.flavor-jar .product-photo{ aspect-ratio:1; max-height:220px; }
+.cart-image .product-photo{ width:72px; height:72px; border-radius:10px; }
+.pdp-photo{ width:min(100%,460px); aspect-ratio:1; object-fit:cover; border-radius:22px; box-shadow:var(--shadow); position:relative; z-index:1; }
+@media (max-width:640px){ .prd-two{ grid-template-columns:1fr; } .prd-photo-big{ width:150px; height:150px; } .prd-remove{ margin-left:0; } }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { ProductPhoto } from "@/components/ui/ProductPhoto";
 import Link from "next/link";
 import { Label, Btn } from "@/components/ui/components";
 import { Jar } from "@/components/ui/Jars";
@@ -24,12 +25,15 @@ export function Marquee() {
 }
 
 /* ---------------- Flavours ---------------- */
+const EN_NUM = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+const ZH_NUM = ["", "一", "两", "三", "四", "五", "六", "七", "八", "九", "十"];
+
 export function FlavourShowcase({ products }: { products: any[] }) {
   return (
     <section className="products flavours" id="flavours">
       <div className="wrap">
         <div className="section-head center">
-          <Label zh="四款风味">Four Flavours</Label>
+          <Label zh={`${ZH_NUM[products.length] || products.length}款风味`}>{`${EN_NUM[products.length] || products.length} Flavour${products.length === 1 ? "" : "s"}`}</Label>
           <h2 className="section-title">Pick your jar of joy</h2>
           <p className="section-lede">Every flavour comes in Less Sugar or No Sugar. Enjoy it chilled, or steam it warm.</p>
         </div>
@@ -37,7 +41,7 @@ export function FlavourShowcase({ products }: { products: any[] }) {
           {products.map((p) => (
             <article className={`flav-card flav-${p.tone}`} key={p.id}>
               <Link href={`/product/${p.id}`} className="flav-jar" data-nofish="1" aria-label={`View ${p.flavorEn}`}>
-                <Jar tone={p.tone} size={0.68} label="小胶傲" labelEn={p.cap} />
+                <ProductPhoto p={p} size={0.68} />
               </Link>
               <div className="flav-body">
                 <div className="flav-name"><h3>{p.flavorEn}</h3><span>{p.flavorZh}</span></div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { ProductPhoto } from "@/components/ui/ProductPhoto";
 import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components/layout/Shared";
 import { Label, Btn, QtyStepper } from "@/components/ui/components";
@@ -30,7 +31,7 @@ function CartImage({ it, p, products }: any) {
     <div className="cart-line-jar cart-image">
       {it.box
         ? <BoxThumb contents={it.contents} products={products} />
-        : <Jar tone={p ? p.tone : "matcha"} size={0.5} label="小胶傲" labelEn={p ? p.cap : "JOYJAR"} />}
+        : <ProductPhoto p={p} size={0.5} />}
     </div>
   );
 }
@@ -129,7 +130,7 @@ export function CartClient({ products, bundles, deliveryConfig }: any) {
                         <button className="remove" data-nofish="1" onClick={() => removeItem(i)}>Remove · 移除</button>
                       </div>
                     </div>
-                    <div className="cart-line-price">{priceStr((b ? b.price : 0) * it.qty)}</div>
+                    <div className="cart-line-price">{priceStr(L.total)}</div>
                   </div>
                 );
               })}

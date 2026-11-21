@@ -11,7 +11,7 @@ export default async function StockPage() {
   if (!(await isAdmin())) redirect("/admin/login");
   const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
   const [products, bundles, paid, toPack] = await Promise.all([
-    prisma.product.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.product.findMany({ where: { archived: false }, orderBy: { sortOrder: "asc" } }),
     prisma.bundle.findMany({ select: { id: true, qty: true } }),
     prisma.order.findMany({ where: { status: "paid", createdAt: { gte: since } }, select: { items: true } }),
     prisma.order.findMany({ where: { status: "paid", fulfil: "new" }, select: { items: true } }),

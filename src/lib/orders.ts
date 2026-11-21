@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 // product pages are cached for an hour; refresh them when stock changes
 export function refreshShop() {
-  try { revalidatePath("/"); revalidatePath("/product/[id]", "page"); } catch {}
+  try { revalidatePath("/"); revalidatePath("/cart"); revalidatePath("/product/[id]", "page"); } catch {}
 }
 
 export const HITPAY_API = process.env.HITPAY_API_URL || "https://api.sandbox.hit-pay.com/v1";

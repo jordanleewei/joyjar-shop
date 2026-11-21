@@ -251,7 +251,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
                 return (
                   <div className="summary-item" key={i}>
                     <span>{it.qty}× {p ? p.flavorEn : "Item"}<em>{b ? b.title : ""}{summ ? " · " + summ : ""}</em></span>
-                    <span>{priceStr((b ? b.price : 0) * it.qty)}</span>
+                    <span>{priceStr(L.total)}</span>
                   </div>
                 );
               })}

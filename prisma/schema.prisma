@@ -28,6 +28,17 @@ model Product {
   allergens     String @default("")
   sortOrder     Int    @default(0)
   stock         Int?   // jars in stock; empty = not tracked
+  price         Float? // single-jar price; empty = the standard Single Jar price
+  archived      Boolean @default(false) // removed in the admin (kept so old orders still show its name)
+  imageVer      Int    @default(0)      // 0 = no photo; goes up each time a photo is uploaded
+}
+
+// Product photos, stored in the database (resized in the browser before upload).
+model ProductImage {
+  productId String   @id
+  mime      String
+  data      Bytes
+  updatedAt DateTime @updatedAt
 }
 
 model Bundle {

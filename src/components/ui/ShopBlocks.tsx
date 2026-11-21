@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ProductPhoto } from "./ProductPhoto";
 import Link from "next/link";
 import { Label, Btn, Wave } from "./components";
 import { Jar } from "./Jars";
@@ -82,7 +83,7 @@ export function BundleCard({ b, deliveryConfig }: any) {
 export function FlavorCard({ p }: any) {
   return (
     <Link href={`/product/${p.id}`} className="flavor-card" data-nofish="1">
-      <div className="flavor-jar"><Jar tone={p.tone} size={0.72} label="小胶傲" labelEn={p.cap} /></div>
+      <div className="flavor-jar"><ProductPhoto p={p} size={0.72} /></div>
       <div className="flavor-body">
         <h3 className="flavor-name">{p.flavorEn}</h3>
         <p className="flavor-zh">{p.flavorZh}</p>
