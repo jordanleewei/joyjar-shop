@@ -201,6 +201,7 @@ export function FishProvider() {
     const handler = (e: MouseEvent) => {
       // fish swim out of buttons (any <button>, button-style link or [data-fish])
       const t = e.target as HTMLElement;
+      if (t.closest(".admin-shell")) return; // no fish in the admin (they'd end up on printed labels)
       const btn = t.closest("button, [role='button'], a.btn, a.cart-btn, a.member-btn, a.nav-pill, a.nav-link, .site-header a, [data-fish]") as HTMLElement | null;
       if (!btn || (btn as HTMLButtonElement).disabled) return;
       let x = e.clientX, y = e.clientY;

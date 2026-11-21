@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 import { tierFor } from "./club";
+import { pointsSummary } from "./points";
 
 const COOKIE = "jj_session";
 const MAX_AGE = 60 * 60 * 24 * 60; // 60 days
@@ -68,13 +69,13 @@ export async function memberSpend(memberId: string) {
 export async function currentMember() {
   const id = await sessionMemberId();
   if (!id) return null;
-  // one round trip: member and their spend in parallel
-  const [m, spend] = await Promise.all([prisma.member.findUnique({ where: { id } }), memberSpend(id)]);
+  // one round trip: member, spend and points in parallel
+  const [m, spend, pts] = await Promise.all([prisma.member.findUnique({ where: { id } }), memberSpend(id), pointsSummary(id)]);
   if (!m) return null;
-  const t = tierFor(spend);
+  const t = tierFor(pts.lifetime);
   return {
-    id: m.id, num: m.num, email: m.email, name: m.name, card: m.card,
-    spend, tierIndex: t.index, discount: t.tier.discount, createdAt: m.createdAt.toISOString(),
+    id: m.id, num: m.num, email: m.email, name: m.name, card: m.card, petState: m.petState,
+    spend, points: pts.lifetime, balance: pts.balance, tierIndex: t.index, createdAt: m.createdAt.toISOString(),
   };
 }
 

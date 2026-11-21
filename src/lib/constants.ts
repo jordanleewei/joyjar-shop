@@ -100,7 +100,7 @@ export const FAQ = [
   { q:"How do I store it and how long does it last?", qZh:"怎么保存？可以放多久？",
     a:"Refrigerate at 0–4°C as soon as it arrives and enjoy within 6–7 days. Please don't freeze it." },
   { q:"Hot or cold?", qZh:"冷吃还是热吃？",
-    a:"Both. Eat it chilled straight from the fridge for the bounciest bite, or steam the jar for 10–15 minutes to enjoy it warm." },
+    a:"Both! Enjoy it chilled straight from the fridge for the bounciest bite. Prefer it warm? Open the cap, then rest it back on top loosely (don't screw it on tight) and steam the jar for 10–15 minutes." },
   { q:"What sugar options do you have?", qZh:"有什么糖度选择？",
     a:"Every flavour comes in Less Sugar or No Sugar. Pandan and Rose use coconut sugar; Noir and Calm use rock sugar." },
   { q:"What are the allergens?", qZh:"有什么过敏原？",
@@ -108,7 +108,7 @@ export const FAQ = [
   { q:"The lid button was already up when I got it.", qZh:"收到时瓶盖按钮已经弹起？",
     a:"Please don't eat it. That means the vacuum seal has broken. Message us with your order number and we'll sort it out." },
   { q:"How does delivery work?", qZh:"怎么配送？",
-    a:"We deliver every jar ourselves, chilled, around Singapore. Delivery is free over $50, or you can self pick-up from our studio." },
+    a:"We deliver every jar ourselves, chilled, to all 5 regions of Singapore: Central, East, North, North-East and West. Delivery is free over $50, and we'll WhatsApp you to arrange a time." },
   { q:"What do JoyJar Club members get?", qZh:"会员有什么福利？",
-    a:"Joining is free. You get 5% off your first order, design a member card with your own avatar and fish maw pet, and unlock up to 15% off as you move from Pearl to Jade, Gold and Diamond, with free delivery on every order at Diamond. Missions (like posting about JoyJar) earn extra 5% vouchers, and you can stack up to 35% off a single order." },
+    a:"Joining is free. You get 5% off your first order and design a member card with your own avatar and fish maw pet. Every $1 you spend earns 1 point, and each mission (like posting about JoyJar) earns 5 points. Collect 200, 400 and 600 points to move up from Pearl to Jade, Gold and Diamond. Trade 100 points for $5 off an order, or spend them on treats and accessories for your pet. One discount per order." },
 ];

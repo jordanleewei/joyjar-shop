@@ -2,68 +2,79 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { currentMember } from '@/lib/auth';
 import { priceCart, newOrderNum, HITPAY_API } from '@/lib/orders';
-import { discountOptions, stackDiscounts } from '@/lib/discounts';
+import { discountOptions, applyDiscount } from '@/lib/discounts';
+import { pointsSummary, lockMember } from '@/lib/points';
+import { pointsFor } from '@/lib/club';
+import { REGIONS } from '@/lib/regions';
 
 // Prices the cart on the server, saves a pending order, then opens a HitPay payment request.
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cart, form = {}, pickup = false, zoneId, slot = "", pay = "paynow", discounts = {} } = body || {};
+    const { cart, form = {}, region = "", pay = "paynow", discount = {} } = body || {};
 
     const hitpayApiKey = process.env.HITPAY_API_KEY;
     if (!hitpayApiKey) {
       return NextResponse.json({ error: 'HitPay API key is missing' }, { status: 500 });
     }
 
-    if (!form.name || !form.phone || (!pickup && !form.addr)) {
-      return NextResponse.json({ error: 'Please fill in your name, phone and address.' }, { status: 400 });
+    if (!form.name || !form.phone || !form.addr || !/^\d{6}$/.test(String(form.postal || '').trim())) {
+      return NextResponse.json({ error: 'Please fill in your name, phone, address and postal code.' }, { status: 400 });
     }
+    const regionId = REGIONS.some((r) => r.id === region) ? String(region) : '';
+    if (!regionId) return NextResponse.json({ error: 'Please choose your delivery region.' }, { status: 400 });
 
-    const member = await currentMember();
-    // member discounts: only what they ticked, re-checked here, capped at 35%
-    const opts = member ? await discountOptions(member) : null;
-    const stacked = opts ? stackDiscounts(opts, {
-      tier: !!discounts.tier, welcome: !!discounts.welcome,
-      vouchers: Array.isArray(discounts.vouchers) ? discounts.vouchers.map(String) : [],
-    }) : { rate: 0, parts: [] };
     let priced;
     try {
-      priced = await priceCart(cart, { pickup: !!pickup, zoneId, discountRate: stacked.rate, freeDelivery: !!opts?.freeDelivery });
+      priced = await priceCart(cart);
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 400 });
     }
 
+    const member = await currentMember();
     const num = newOrderNum();
-    const order = await prisma.order.create({
-      data: {
-        num,
-        customerDetails: JSON.stringify({
-          name: String(form.name).slice(0, 120), phone: String(form.phone).slice(0, 40),
-          email: String(form.email || member?.email || "").slice(0, 160),
-          addr: String(form.addr || "").slice(0, 300), unit: String(form.unit || "").slice(0, 40),
-          postal: String(form.postal || "").slice(0, 20), note: String(form.note || "").slice(0, 500),
-        }),
-        slot: String(slot).slice(0, 120),
-        zoneId: pickup ? "pickup" : (priced.zone?.id || ""),
-        subtotal: priced.subtotal,
-        deliveryFee: priced.ship,
-        discount: priced.discount,
-        total: priced.total,
-        method: pay === "card" ? "card" : "paynow",
-        items: JSON.stringify(priced.cart),
-        memberId: member?.id || null,
-        discountDetail: stacked.parts.length ? JSON.stringify(stacked.parts.map((p) => ({ kind: p.kind, label: p.label, rate: p.rate }))) : "",
-      },
+    const choice = { kind: discount.kind, blocks: Number(discount.blocks) || 0 };
+
+    // one discount only: welcome 5% or points. Points are checked inside a lock so they can't be spent twice.
+    const order = await prisma.$transaction(async (tx) => {
+      let applied = applyDiscount(null, {}, priced.subtotal);
+      if (member) {
+        if (choice.kind === 'points') await lockMember(tx, member.id);
+        const opts = await discountOptions(member);
+        if (choice.kind === 'points') opts.points = (await pointsSummary(member.id, tx)).balance;
+        applied = applyDiscount(opts, choice, priced.subtotal);
+      }
+      const total = Math.round((priced.subtotal - applied.amount + priced.ship) * 100) / 100;
+      return tx.order.create({
+        data: {
+          num,
+          customerDetails: JSON.stringify({
+            name: String(form.name).slice(0, 120), phone: String(form.phone).slice(0, 40),
+            email: String(form.email || member?.email || "").slice(0, 160),
+            addr: String(form.addr || "").slice(0, 300), unit: String(form.unit || "").slice(0, 40),
+            postal: String(form.postal || "").trim().slice(0, 20), note: String(form.note || "").slice(0, 500),
+          }),
+          slot: "",
+          zoneId: regionId,
+          region: regionId,
+          subtotal: priced.subtotal,
+          deliveryFee: priced.ship,
+          discount: applied.amount,
+          total,
+          method: pay === "card" ? "card" : "paynow",
+          items: JSON.stringify(priced.cart),
+          memberId: member?.id || null,
+          pointsUsed: applied.pointsUsed,
+          pointsEarned: member ? pointsFor(priced.subtotal - applied.amount) : 0,
+          discountDetail: applied.kind !== 'none' ? JSON.stringify([{ kind: applied.kind, label: applied.label, amount: applied.amount, points: applied.pointsUsed }]) : "",
+        },
+      });
     });
-    // hold the vouchers used on this order (they free up again if it's never paid)
-    const voucherIds = stacked.parts.filter((p) => p.kind === "voucher" && p.id).map((p) => p.id as string);
-    if (voucherIds.length && member) {
-      await prisma.missionClaim.updateMany({ where: { id: { in: voucherIds }, memberId: member.id }, data: { usedOrderId: order.id } });
-    }
+    const total = order.total;
 
     const origin = new URL(request.url).origin;
     const params = new URLSearchParams();
-    params.append('amount', priced.total.toFixed(2));
+    params.append('amount', total.toFixed(2));
     params.append('currency', 'SGD');
     params.append('reference_number', num);
     params.append('purpose', `JoyJar order ${num}`);
@@ -94,7 +105,7 @@ export async function POST(request: Request) {
     }
 
     await prisma.order.update({ where: { id: order.id }, data: { hitpayId: String(data.id || '') } });
-    return NextResponse.json({ url: data.url, num, total: priced.total });
+    return NextResponse.json({ url: data.url, num, total });
   } catch (error: any) {
     console.error('Error creating HitPay payment:', error);
     return NextResponse.json(

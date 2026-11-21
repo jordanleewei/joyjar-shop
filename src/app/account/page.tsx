@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { currentMember } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountClient } from "./AccountClient";
-import { discountOptions } from "@/lib/discounts";
+import { petInventory } from "@/lib/points";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "My account · JoyJar Club 小胶傲俱乐部" };
@@ -12,14 +12,18 @@ export const metadata: Metadata = { title: "My account · JoyJar Club 小胶傲�
 export default async function AccountPage() {
   const member = await currentMember();
   if (!member) redirect("/account/login");
-  const orders = (await prisma.order.findMany({
-    where: { memberId: member.id, status: { in: ["paid", "pending"] } },
-    orderBy: { createdAt: "desc" }, take: 20,
-  })).map((o) => ({
-    num: o.num, total: o.total, discount: o.discount, status: o.status,
+  const [rows, paidCount, inv] = await Promise.all([
+    prisma.order.findMany({
+      where: { memberId: member.id, status: { in: ["paid", "pending"] } },
+      orderBy: { createdAt: "desc" }, take: 20,
+    }),
+    prisma.order.count({ where: { memberId: member.id, status: "paid" } }),
+    petInventory(member.id, member.petState),
+  ]);
+  const orders = rows.map((o) => ({
+    num: o.num, total: o.total, discount: o.discount, status: o.status, pointsEarned: o.pointsEarned,
     date: o.createdAt.toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" }),
   }));
-  const opts = await discountOptions(member);
-  const perks = { vouchers: opts.vouchers.length, welcome: !!opts.welcome };
-  return <AccountClient member={member} orders={orders} perks={perks} />;
+  const pet = { balance: member.balance, lifetime: member.points, tierIndex: member.tierIndex, owned: inv.owned, treats: inv.treats };
+  return <AccountClient member={member} orders={orders} perks={{ welcome: paidCount === 0 }} pet={pet} />;
 }

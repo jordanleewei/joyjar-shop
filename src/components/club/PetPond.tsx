@@ -2,13 +2,16 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { FishMawPet } from "./MemberCard";
+import { TREATS } from "@/lib/club";
 
 const LINES = ["Duang duang! 💛", "Feed me please! 🍚", "啵!", "I'm full of collagen ✨", "Glow up time!", "More snacks?", "Hehe, that tickles!", "You're my favourite human 💕"];
 
-type Food = { id: number; x: number; y: number };
+type Food = { id: number; x: number; y: number; treat?: string };
 
 // A little pond: the pet wanders, follows your pointer, swims to food you drop, and reacts when tapped.
-export function PetPond({ colour, accessory, name, height = 340 }: { colour: string; accessory: string; name: string; height?: number }) {
+// treats: what the member owns; onTreat is called when one is dropped (the parent saves it).
+export function PetPond({ colour, accessory, name, height = 340, treats, onTreat }: { colour: string; accessory: string; name: string; height?: number; treats?: Record<string, number>; onTreat?: (id: string) => void }) {
+  const [sel, setSel] = useState<string | null>(null);
   const pond = useRef<HTMLDivElement>(null);
   const petEl = useRef<HTMLDivElement>(null);
   const pos = useRef({ x: 120, y: 120, vx: 0, vy: 0, face: 1 });
@@ -58,7 +61,14 @@ export function PetPond({ colour, accessory, name, height = 340 }: { colour: str
           setFoodList([...foods.current]);
           setFed((n) => n + 1);
           heart(p.x + PET / 2, p.y);
-          say(["Yum! 😋", "Nom nom!", "So tasty!", "More please!"][Math.floor(Math.random() * 4)]);
+          if (f.treat) {
+            heart(p.x + PET / 2 - 22, p.y + 10); heart(p.x + PET / 2 + 22, p.y + 10);
+            const t = TREATS.find((x) => x.id === f.treat);
+            say(t ? `${t.emoji} My favourite! Thank you! 💕` : "Best treat ever! 💕");
+            setHappy(true); window.setTimeout(() => setHappy(false), 650);
+          } else {
+            say(["Yum! 😋", "Nom nom!", "So tasty!", "More please!"][Math.floor(Math.random() * 4)]);
+          }
         }
       } else if (pointer.current) {
         goal = { x: pointer.current.x - PET / 2, y: pointer.current.y - PET * 0.41 }; speed = 80;
@@ -95,7 +105,13 @@ export function PetPond({ colour, accessory, name, height = 340 }: { colour: str
   const dropFood = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".pond-pet")) return;
     const { x, y } = local(e);
-    const f = { id: idRef.current++, x, y };
+    let treat: string | undefined;
+    if (sel && treats && (treats[sel] || 0) > 0) {
+      treat = sel;
+      onTreat?.(sel);
+      if ((treats[sel] || 0) <= 1) setSel(null);
+    }
+    const f = { id: idRef.current++, x, y, treat };
     foods.current = [...foods.current, f].slice(-5);
     setFoodList([...foods.current]);
   };
@@ -114,7 +130,9 @@ export function PetPond({ colour, accessory, name, height = 340 }: { colour: str
       onPointerLeave={() => { pointer.current = null; }}
       role="application" aria-label={`Play with ${name}: tap the water to drop food, tap ${name} to say hi`}>
       <div className="pond-ripples" aria-hidden="true"><i /><i /><i /></div>
-      {foodList.map((f) => <span key={f.id} className="pond-food" style={{ left: f.x, top: f.y }} />)}
+      {foodList.map((f) => f.treat
+        ? <span key={f.id} className="pond-treat" style={{ left: f.x, top: f.y }}>{TREATS.find((t) => t.id === f.treat)?.emoji}</span>
+        : <span key={f.id} className="pond-food" style={{ left: f.x, top: f.y }} />)}
       <div className="pond-pet" ref={petEl} onClick={tapPet} style={{ width: PET }}>
         <div className={happy ? "pond-happy" : ""}><FishMawPet colour={colour} accessory={accessory} size={PET} /></div>
       </div>
@@ -122,8 +140,18 @@ export function PetPond({ colour, accessory, name, height = 340 }: { colour: str
       {hearts.map((h) => <span key={h.id} className="pond-heart" style={{ left: h.x, top: h.y }}>💛</span>)}
       <div className="pond-hud">
         <span className="pond-name">{name}</span>
-        <span className="pond-tip">Tap the water to feed · tap {name} to say hi{fed ? ` · fed ${fed}×` : ""}</span>
+        <span className="pond-tip">{sel ? `Tap the water to drop a ${TREATS.find((t) => t.id === sel)?.en.toLowerCase().replace(/s$/, "")}` : `Tap the water to feed · tap ${name} to say hi`}{fed ? ` · fed ${fed}×` : ""}</span>
       </div>
+      {treats && TREATS.some((t) => treats[t.id] > 0) && (
+        <div className="pond-treats" onClick={(e) => e.stopPropagation()}>
+          {TREATS.filter((t) => treats[t.id] > 0).map((t) => (
+            <button key={t.id} type="button" data-nofish="1" className={`pond-treat-btn ${sel === t.id ? "is-on" : ""}`}
+              onClick={() => setSel(sel === t.id ? null : t.id)} aria-pressed={sel === t.id} title={t.en}>
+              {t.emoji}<b>{treats[t.id]}</b>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

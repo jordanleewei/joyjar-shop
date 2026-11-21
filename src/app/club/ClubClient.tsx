@@ -9,7 +9,7 @@ import { CardDesigner } from "@/components/club/CardDesigner";
 import { Tiers } from "@/components/club/Tiers";
 import { MissionsPreview } from "@/components/club/Missions";
 import { PetPond } from "@/components/club/PetPond";
-import { TIERS, tierFor, parseCard, DEFAULT_CARD, CardDesign } from "@/lib/club";
+import { tierFor, parseCard, DEFAULT_CARD, CardDesign, REDEEM_BLOCK, REDEEM_VALUE } from "@/lib/club";
 import { priceStr } from "@/components/ui/ShopBlocks";
 
 function JoinForm({ card, name, setName }: { card: CardDesign; name: string; setName: (s: string) => void }) {
@@ -61,13 +61,13 @@ function JoinForm({ card, name, setName }: { card: CardDesign; name: string; set
   );
 }
 
-export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
+export function ClubClient({ member, orders, owned }: { member: any; orders: any[]; owned?: string[] }) {
   const router = useRouter();
   const [card, setCard] = useState<CardDesign>(() => member ? parseCard(member.card) : DEFAULT_CARD);
   const [name, setName] = useState<string>(member?.name || "");
   const [saved, setSaved] = useState<"" | "saving" | "saved" | "error">("");
 
-  const t = member ? tierFor(member.spend) : null;
+  const t = member ? tierFor(member.points) : null;
 
   const save = async () => {
     setSaved("saving");
@@ -90,20 +90,21 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
                 <div className="tier-progress">
                   <div className="tier-bar"><span style={{ width: `${Math.round(t!.progress * 100)}%` }} /></div>
                   <p>{t!.next
-                    ? <>Spend <strong>{priceStr(Math.ceil(t!.toNext * 100) / 100)}</strong> more to reach <strong>{t!.next.en}</strong> ({Math.round(t!.next.discount * 100)}% off).</>
-                    : <>You&apos;re at the top. <strong>{Math.round(t!.tier.discount * 100)}% off</strong> every order, forever.</>}
+                    ? <>Collect <strong>{t!.toNext} more points</strong> to reach <strong>{t!.next.en}</strong>.</>
+                    : <>You&apos;re at the top tier. Thank you for being a <strong>Diamond</strong> member 💎</>}
                   </p>
-                  <p className="tier-spend">Total spent {priceStr(member.spend)}{t!.tier.discount ? ` · your ${Math.round(t!.tier.discount * 100)}% applies at checkout automatically` : ""}</p>
+                  <p className="tier-spend">You have <strong>{member.balance} points</strong> to spend · {REDEEM_BLOCK} pts = ${REDEEM_VALUE} off</p>
                 </div>
               </>
             ) : (
               <>
                 <Label zh="小胶傲俱乐部">JoyJar Club</Label>
-                <h1 className="section-title club-title">Level up. Get a pet.<br /><em>Save on every jar.</em></h1>
+                <h1 className="section-title club-title">Collect points. Get a pet.<br /><em>Treat yourself.</em></h1>
                 <p className="section-lede">Free to join. Design your own member card with your avatar and a cute fish maw pet. It lives in your account, forever.</p>
                 <div className="club-chips">
                   <span>5% off your first order</span>
-            <span>Up to 35% off with tiers + missions</span>
+                  <span>1 point for every $1</span>
+                  <span>{REDEEM_BLOCK} points = ${REDEEM_VALUE} off</span>
                   <span>Your avatar + a fish maw pet</span>
                   <span>Pearl → Jade → Gold → Diamond</span>
                 </div>
@@ -133,7 +134,7 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
                 <input value={name} maxLength={40} onChange={(e) => { setName(e.target.value); setSaved(""); }} />
               </label>
             )}
-            <CardDesigner d={card} onChange={(d) => { setCard(d); setSaved(""); }} tierIndex={member?.tierIndex || 0} />
+            <CardDesigner d={card} onChange={(d) => { setCard(d); setSaved(""); }} tierIndex={member?.tierIndex || 0} owned={owned} />
             {member && (
               <div className="club-save">
                 <Btn onClick={save} disabled={saved === "saving"}>{saved === "saving" ? "Saving…" : "Save my card · 保存"}</Btn>
@@ -147,7 +148,7 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
               <div className="club-account">
                 <h3 className="ck-h">Your orders · 订单</h3>
                 {orders.length === 0 ? (
-                  <p className="muted">No orders yet. Orders you place while logged in count towards your tier.</p>
+                  <p className="muted">No orders yet. Orders you place while logged in earn 1 point for every $1.</p>
                 ) : (
                   <ul className="club-orders">
                     {orders.map((o) => (
@@ -177,7 +178,7 @@ export function ClubClient({ member, orders }: { member: any; orders: any[] }) {
           <div>
             <Label zh="你的宠物">Meet your fish maw pet</Label>
             <h2 className="section-title">Say hi to <em>{card.petName}</em>.</h2>
-            <p className="section-lede">Every member gets a little fish maw pet. Feed it, play with it, rename it, and dress it up. Accessories unlock as you move up from Pearl to Diamond.</p>
+            <p className="section-lede">Every member gets a little fish maw pet. Feed it, play with it, rename it, and dress it up. Spend your points in the pet shop on treats and accessories. Fancier ones unlock as you move up from Pearl to Diamond.</p>
             <ul className="pond-perks">
               <li><b>Pearl</b> 🎀 🌸 🧢</li><li><b>Jade</b> 🌿 👓 🤵</li><li><b>Gold</b> ⭐ 👨‍🍳 🎧</li><li><b>Diamond</b> 👑 💎 😇</li>
             </ul>

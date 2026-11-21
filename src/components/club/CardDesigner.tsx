@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import {
   SKIN, HAIR_COLOURS, hairFor, TOPS, CLOTHES, CARD_PATTERNS, LOOKS, FACIAL, DEFAULT_HAIR, CARD_THEMES, PET_COLOURS, ACCESSORIES, TIERS,
-  CardDesign, unlockedAccessories,
+  CardDesign, FREE_ACCESSORIES, tierOfAccessory,
 } from "@/lib/club";
 import { FishMawPet, CardPattern } from "./MemberCard";
 
@@ -21,12 +21,10 @@ function Swatches({ list, value, onChange, label }: { list: string[]; value: num
   );
 }
 
-export function CardDesigner({ d, onChange, tierIndex = 0, only }: { d: CardDesign; onChange: (d: CardDesign) => void; tierIndex?: number; only?: "you" | "pet" | "card" }) {
+export function CardDesigner({ d, onChange, tierIndex = 0, only, owned = FREE_ACCESSORIES }: { d: CardDesign; onChange: (d: CardDesign) => void; tierIndex?: number; only?: "you" | "pet" | "card"; owned?: string[] }) {
   const [tabState, setTab] = useState<"you" | "pet" | "card">("you");
   const tab = only || tabState;
   const set = (patch: Partial<CardDesign>) => onChange({ ...d, ...patch });
-  const unlocked = unlockedAccessories(tierIndex);
-  const unlockTier = (id: string) => TIERS.find((t) => t.unlocks.includes(id));
 
   return (
     <div className="cd">
@@ -105,18 +103,20 @@ export function CardDesigner({ d, onChange, tierIndex = 0, only }: { d: CardDesi
             <span className="cd-label">Accessory</span>
             <div className="cd-chips">
               {ACCESSORIES.map((a) => {
-                const ok = unlocked.includes(a.id);
-                const t = unlockTier(a.id);
+                const ok = owned.includes(a.id);
+                const need = tierOfAccessory(a.id);
+                const tierLocked = need > tierIndex;
                 return (
                   <button key={a.id} type="button" data-nofish="1" disabled={!ok}
-                    title={ok ? a.en : `Unlocks at ${t?.en}`}
+                    title={ok ? a.en : tierLocked ? `Unlocks at ${TIERS[need]?.en}` : `${a.cost} points in the pet shop`}
                     className={`chip ${d.accessory === a.id ? "is-on" : ""} ${ok ? "" : "is-locked"}`}
                     onClick={() => ok && set({ accessory: a.id })}>
-                    {a.en}{!ok && <small>🔒 {t?.en}</small>}
+                    {a.en}{!ok && <small>{tierLocked ? `🔒 ${TIERS[need]?.en}` : `${a.cost} pts`}</small>}
                   </button>
                 );
               })}
             </div>
+            <p className="cd-hint">Get more accessories with points in the pet shop. Fancier ones unlock at higher tiers.</p>
           </div>
         </div>
       )}

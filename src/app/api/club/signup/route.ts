@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { hashPassword, startSession } from '@/lib/auth';
-import { cleanCard, unlockedAccessories } from '@/lib/club';
+import { cleanCard, FREE_ACCESSORIES } from '@/lib/club';
 
 export async function POST(request: Request) {
   const { email, password, name, card } = await request.json().catch(() => ({}));
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!nm) return NextResponse.json({ error: 'Please tell us your name.' }, { status: 400 });
 
   const c = cleanCard(card);
-  if (!unlockedAccessories(0).includes(c.accessory)) c.accessory = 'none';
+  if (!FREE_ACCESSORIES.includes(c.accessory)) c.accessory = 'none';
 
   const exists = await prisma.member.findUnique({ where: { email: em } });
   if (exists) return NextResponse.json({ error: 'That email is already a member. Try logging in.' }, { status: 409 });

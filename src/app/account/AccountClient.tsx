@@ -10,7 +10,8 @@ import { CardDesigner } from "@/components/club/CardDesigner";
 import { Tiers } from "@/components/club/Tiers";
 import { MissionsPanel } from "@/components/club/Missions";
 import { PetPond } from "@/components/club/PetPond";
-import { TIERS, tierFor, parseCard, memberNo, unlockedAccessories, CardDesign, ACCESSORIES, MAX_STACKED, FREE_DELIVERY_FROM_TIER } from "@/lib/club";
+import { PetShop, PetState } from "@/components/club/PetShop";
+import { TIERS, tierFor, parseCard, memberNo, CardDesign, ACCESSORIES, TREATS, MISSION_POINTS, REDEEM_BLOCK, REDEEM_VALUE } from "@/lib/club";
 import { priceStr } from "@/components/ui/ShopBlocks";
 
 type Tab = "overview" | "missions" | "pet" | "card" | "orders" | "settings";
@@ -23,7 +24,8 @@ const TABS: { id: Tab; en: string; zh: string }[] = [
   { id: "settings", en: "Settings", zh: "设置" },
 ];
 
-export function AccountClient({ member, orders, perks }: { member: any; orders: any[]; perks: { vouchers: number; welcome: boolean } }) {
+export function AccountClient({ member, orders, perks, pet }: { member: any; orders: any[]; perks: { welcome: boolean }; pet: PetState }) {
+  const [petSt, setPetSt] = useState<PetState>(pet);
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("overview");
   const [card, setCard] = useState<CardDesign>(() => parseCard(member.card));
@@ -57,14 +59,23 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
     }
   };
 
-  const t = tierFor(member.spend);
+  const t = tierFor(petSt.lifetime);
   const dirty = JSON.stringify([card, name]) !== savedCard;
-  const unlocked = unlockedAccessories(t.index);
   const since = new Date(member.createdAt).toLocaleDateString("en-SG", { month: "short", year: "numeric" });
 
-  const save = async () => {
+  // feed a treat: update the count straight away, then save
+  const feedTreat = (id: string) => {
+    setPetSt((s) => ({ ...s, treats: { ...s.treats, [id]: Math.max(0, (s.treats[id] || 0) - 1) } }));
+    fetch("/api/club/pet", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "feed", treat: id }) })
+      .then((r) => r.ok ? r.json() : null).then((d) => d && setPetSt(d)).catch(() => {});
+  };
+  const wear = (id: string) => save({ ...card, accessory: id });
+
+  const save = async (next?: CardDesign) => {
+    const c0 = next || card;
+    if (next) setCard(next);
     setStatus("saving");
-    const res = await fetch("/api/club/card", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ card, name }) });
+    const res = await fetch("/api/club/card", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ card: c0, name }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { setStatus("error"); return; }
     const c = parseCard(data.card);
@@ -75,7 +86,7 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
 
   const SaveBar = (
     <div className="acct-save">
-      <Btn onClick={save} disabled={!dirty || status === "saving"}>{status === "saving" ? "Saving…" : "Save changes · 保存"}</Btn>
+      <Btn onClick={() => save()} disabled={!dirty || status === "saving"}>{status === "saving" ? "Saving…" : "Save changes · 保存"}</Btn>
       {status === "saved" && !dirty && <span className="save-ok">Saved ✓</span>}
       {status === "error" && <span className="form-err">Couldn&apos;t save. Try again?</span>}
       {dirty && status !== "saving" && <span className="muted small">Unsaved changes</span>}
@@ -92,19 +103,19 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
           <div>
             <Label zh="我的会员">My JoyJar Club</Label>
             <h1 className="section-title club-title">Hello, {name.split(" ")[0] || "friend"}.</h1>
-            <span className="acct-tier-pill">{t.tier.zh} · {t.tier.en}{t.tier.discount ? ` · ${Math.round(t.tier.discount * 100)}% off` : ""}</span>
+            <span className="acct-tier-pill">{t.tier.zh} · {t.tier.en} member</span>
             <div className="tier-progress">
               <div className="tier-bar"><span style={{ width: `${Math.round(t.progress * 100)}%` }} /></div>
               <p>{t.next
-                ? <>Spend <strong>{priceStr(Math.ceil(t.toNext * 100) / 100)}</strong> more to reach <strong>{t.next.en}</strong> ({Math.round(t.next.discount * 100)}% off).</>
-                : <>You&apos;re at the top. <strong>{Math.round(t.tier.discount * 100)}% off</strong> every order.</>}
+                ? <>Collect <strong>{t.toNext} more points</strong> to reach <strong>{t.next.en}</strong>.</>
+                : <>You&apos;re at the top tier. Thank you for being a <strong>Diamond</strong> member 💎</>}
               </p>
             </div>
             <dl className="acct-stats">
               <div><dt>Member no.</dt><dd>{memberNo(member.num)}</dd></div>
               <div><dt>Member since</dt><dd>{since}</dd></div>
-              <div><dt>Total spent</dt><dd>{priceStr(member.spend)}</dd></div>
-              <div><dt>Your discount</dt><dd>{t.tier.discount ? `${Math.round(t.tier.discount * 100)}%` : "—"}</dd></div>
+              <div><dt>Points to spend</dt><dd>{petSt.balance}</dd></div>
+              <div><dt>Lifetime points</dt><dd>{petSt.lifetime}</dd></div>
             </dl>
           </div>
           <div className="acct-hero-card">
@@ -129,7 +140,7 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
         <div className="wrap">
           {tab === "overview" && (
             <div className="acct-overview">
-              <PerksPanel tierIndex={t.index} vouchers={perks.vouchers} welcome={perks.welcome}
+              <PerksPanel tierIndex={t.index} balance={petSt.balance} owned={petSt.owned} welcome={perks.welcome}
                 onMissions={() => go("missions")} onPet={() => go("pet")} />
               <div className="acct-panel acct-pet-mini">
                 <h3 className="ck-h">{card.petName} says hi 👋</h3>
@@ -140,7 +151,7 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
                 <h3 className="ck-h">Latest order · 最新订单</h3>
                 {orders[0]
                   ? <p className="acct-latest"><strong>{orders[0].num}</strong> · {orders[0].date} · {priceStr(orders[0].total)} <em className={`st st-${orders[0].status}`}>{orders[0].status === "paid" ? "Paid" : "Unpaid"}</em></p>
-                  : <p className="muted">No orders yet. Orders you place while logged in count towards your tier.</p>}
+                  : <p className="muted">No orders yet. Orders you place while logged in earn 1 point for every $1.</p>}
                 <Btn onClick={() => router.push("/product/jar-6")}>Shop the jars · 选购</Btn>
               </div>
             </div>
@@ -151,14 +162,15 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
           {tab === "pet" && (
             <div className="acct-split">
               <div>
-                <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={400} />
-                <p className="muted small" style={{ marginTop: 10 }}>{unlocked.length - 1} of 12 accessories unlocked · more unlock as you move up tiers</p>
+                <PetPond colour={card.petColour} accessory={card.accessory} name={card.petName} height={400} treats={petSt.treats} onTreat={feedTreat} />
+                <p className="muted small" style={{ marginTop: 10 }}>{petSt.owned.length - 1} of {ACCESSORIES.length - 1} accessories collected{TREATS.some((x) => petSt.treats[x.id] > 0) ? " · pick a treat at the bottom of the pond to feed it" : ""}</p>
+                <div className="acct-panel" style={{ marginTop: 18 }}>
+                  <Label zh="我的宠物">Your fish maw pet</Label>
+                  <CardDesigner d={card} onChange={(d) => { setCard(d); setStatus(""); }} tierIndex={t.index} only="pet" owned={petSt.owned} />
+                  {SaveBar}
+                </div>
               </div>
-              <div>
-                <Label zh="我的宠物">Your fish maw pet</Label>
-                <CardDesigner d={card} onChange={(d) => { setCard(d); setStatus(""); }} tierIndex={t.index} only="pet" />
-                {SaveBar}
-              </div>
+              <PetShop st={petSt} onChange={setPetSt} wearing={card.accessory} onWear={wear} />
             </div>
           )}
 
@@ -185,13 +197,13 @@ export function AccountClient({ member, orders, perks }: { member: any; orders: 
             <div className="acct-panel">
               <h3 className="ck-h">Your orders · 订单</h3>
               {orders.length === 0 ? (
-                <p className="muted">No orders yet. Orders you place while logged in count towards your tier.</p>
+                <p className="muted">No orders yet. Orders you place while logged in earn 1 point for every $1.</p>
               ) : (
                 <ul className="club-orders">
                   {orders.map((o) => (
                     <li key={o.num}>
                       <span>{o.num}<em>{o.date}</em></span>
-                      <span>{priceStr(o.total)}{o.discount > 0 && <em>saved {priceStr(o.discount)}</em>}<em className={`st st-${o.status}`}>{o.status === "paid" ? "Paid" : "Unpaid"}</em></span>
+                      <span>{priceStr(o.total)}{o.discount > 0 && <em>saved {priceStr(o.discount)}</em>}{o.status === "paid" && o.pointsEarned > 0 && <em>+{o.pointsEarned} pts</em>}<em className={`st st-${o.status}`}>{o.status === "paid" ? "Paid" : "Unpaid"}</em></span>
                     </li>
                   ))}
                 </ul>
@@ -255,26 +267,19 @@ function Settings({ email, onLogout }: { email: string; onLogout: () => void }) 
   );
 }
 
-// What the member gets right now (one line per benefit, not every tier's list),
-// plus a peek at what the next tier adds.
-function PerksPanel({ tierIndex, vouchers, welcome, onMissions, onPet }: { tierIndex: number; vouchers: number; welcome: boolean; onMissions: () => void; onPet: () => void }) {
+// What the member has right now, plus a peek at what the next tier adds.
+function PerksPanel({ tierIndex, balance, owned, welcome, onMissions, onPet }: { tierIndex: number; balance: number; owned: string[]; welcome: boolean; onMissions: () => void; onPet: () => void }) {
   const tier = TIERS[tierIndex];
   const next = TIERS[tierIndex + 1];
-  const unlocked = unlockedAccessories(tierIndex).filter((a) => a !== "none");
   const icon = (id: string) => (ACCESSORIES.find((a) => a.id === id)?.en || "").split(" ")[0];
-  const freeDelivery = tierIndex >= FREE_DELIVERY_FROM_TIER;
+  const worth = Math.floor(balance / REDEEM_BLOCK) * REDEEM_VALUE;
   const tiles: { k: string; icon: string; title: string; sub: string; action?: () => void; actionLabel?: string; dim?: boolean }[] = [
-    tier.discount
-      ? { k: "disc", icon: "%", title: `${Math.round(tier.discount * 100)}% off every order`, sub: `${tier.en} member price, applied at checkout` }
-      : welcome
-        ? { k: "disc", icon: "%", title: "5% off your first order", sub: "Welcome gift, applied at checkout" }
-        : { k: "disc", icon: "%", title: "Member discounts", sub: `Reach ${next?.en || "the next tier"} for ${Math.round((next?.discount || 0) * 100)}% off every order`, dim: true },
-    freeDelivery
-      ? { k: "ship", icon: "🚚", title: "Free delivery", sub: "On every order, no minimum" }
-      : { k: "ship", icon: "🚚", title: "Free delivery over $50", sub: `Every order is free from ${TIERS[FREE_DELIVERY_FROM_TIER].en}`, dim: true },
-    { k: "vouch", icon: "🎟️", title: vouchers ? `${vouchers} voucher${vouchers > 1 ? "s" : ""} ready` : "Earn 5% vouchers",
-      sub: vouchers ? `5% each · stack up to ${Math.round(MAX_STACKED * 100)}% off per order` : "Complete missions to collect them", action: onMissions, actionLabel: vouchers ? "Get more" : "See missions" },
-    { k: "pet", icon: "🐟", title: `${unlocked.length} of ${ACCESSORIES.length - 1} pet accessories`, sub: unlocked.map(icon).join(" "), action: onPet, actionLabel: "Dress up" },
+    { k: "pts", icon: "✨", title: `${balance} points`, sub: worth ? `Worth ${priceStr(worth)} off at checkout (${REDEEM_BLOCK} pts = ${priceStr(REDEEM_VALUE)})` : `${REDEEM_BLOCK - balance > 0 ? REDEEM_BLOCK - balance : 0} more for ${priceStr(REDEEM_VALUE)} off · 1 pt per $1` },
+    welcome
+      ? { k: "welcome", icon: "%", title: "5% off your first order", sub: "Welcome gift, pick it at checkout" }
+      : { k: "welcome", icon: "%", title: "Welcome gift used", sub: "Thanks for your first order 💛", dim: true },
+    { k: "missions", icon: "📸", title: `${MISSION_POINTS} points per mission`, sub: "Post about JoyJar or recommend a friend", action: onMissions, actionLabel: "See missions" },
+    { k: "pet", icon: "🐟", title: `${owned.length - 1} of ${ACCESSORIES.length - 1} accessories`, sub: "Treats and accessories in the pet shop", action: onPet, actionLabel: "Pet shop" },
   ];
   return (
     <div className="acct-panel perks-panel">
@@ -295,15 +300,14 @@ function PerksPanel({ tierIndex, vouchers, welcome, onMissions, onPet }: { tierI
       </ul>
       {next ? (
         <div className="perk-next">
-          <span className="perk-next-label">Next: {next.zh} · {next.en}</span>
+          <span className="perk-next-label">Next: {next.zh} · {next.en} at {next.min} pts</span>
           <div className="perk-next-chips">
-            <span>{Math.round(next.discount * 100)}% off every order</span>
-            {!freeDelivery && tierIndex + 1 >= FREE_DELIVERY_FROM_TIER && <span>Free delivery</span>}
-            <span>{next.unlocks.map(icon).join(" ")} accessories</span>
+            <span>{next.en} badge</span>
+            <span>{next.unlocks.map(icon).join(" ")} in the pet shop</span>
           </div>
         </div>
       ) : (
-        <p className="perk-next perk-top">💎 You&apos;ve reached the top tier. Thank you!</p>
+        <div className="perk-next"><span className="perk-next-label">Top tier reached 💎 Every accessory is open to you.</span></div>
       )}
     </div>
   );

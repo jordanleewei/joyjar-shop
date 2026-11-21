@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { verifyHitpayHmac } from '@/lib/orders';
+import { verifyHitpayHmac, markPaid } from '@/lib/orders';
 
 // HitPay calls this after a payment. Marks the matching order as paid.
 export async function POST(request: Request) {
@@ -14,7 +13,7 @@ export async function POST(request: Request) {
 
   const num = fields.reference_number;
   if (num && String(fields.status).toLowerCase() === 'completed') {
-    await prisma.order.updateMany({ where: { num, status: { not: 'paid' } }, data: { status: 'paid' } });
+    await markPaid(num);
   }
   return NextResponse.json({ ok: true });
 }

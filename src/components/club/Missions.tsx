@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Btn } from "@/components/ui/components";
-import { MISSIONS, VOUCHER_RATE, MAX_STACKED } from "@/lib/club";
+import { MISSIONS, MISSION_POINTS, REDEEM_BLOCK, REDEEM_VALUE } from "@/lib/club";
 
 const BADGE: Record<string, { t: string; bg: string }> = {
   ig_story: { t: "IG", bg: "linear-gradient(135deg,#f5b24f,#d6457a,#7a4fc9)" },
@@ -16,8 +16,8 @@ const BADGE: Record<string, { t: string; bg: string }> = {
 
 type State = {
   missions: { id: string; done: boolean; left: number }[];
-  vouchers: number;
-  history: { id: string; mission: string; status: string; reason: string; date: string; used: boolean }[];
+  points: number;
+  history: { id: string; mission: string; status: string; reason: string; date: string }[];
 };
 
 // Shrink the screenshot in the browser before sending (keeps uploads small).
@@ -62,7 +62,7 @@ function MissionCard({ m, st, onResult }: { m: typeof MISSIONS[number]; st?: { d
     const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) { setResult({ ok: false, text: data.error || "Something went wrong." }); return; }
-    setResult({ ok: data.approved, text: data.approved ? `Approved! +5% voucher added. ${data.reason}` : `Not approved: ${data.reason}` });
+    setResult({ ok: data.approved, text: data.approved ? `Approved! +${MISSION_POINTS} points added. ${data.reason}` : `Not approved: ${data.reason}` });
     if (data.approved) { setFile(null); if (preview) URL.revokeObjectURL(preview); setPreview(null); }
     if (data.state) onResult(data.state);
   };
@@ -72,7 +72,7 @@ function MissionCard({ m, st, onResult }: { m: typeof MISSIONS[number]; st?: { d
       <div className="mission-top">
         <span className="mission-badge" style={{ background: b.bg }}>{b.t}</span>
         <div className="mission-title"><strong>{m.en}</strong><small>{m.zh}</small></div>
-        <span className="mission-reward">+{Math.round(VOUCHER_RATE * 100)}%</span>
+        <span className="mission-reward">+{MISSION_POINTS} pts</span>
       </div>
       <p className="mission-how">{m.how}</p>
       {m.repeat && <p className="mission-meta">Up to {m.repeat.max}× every {m.repeat.days} days{st ? ` · ${st.left} left` : ""}</p>}
@@ -103,7 +103,7 @@ function MissionCard({ m, st, onResult }: { m: typeof MISSIONS[number]; st?: { d
   );
 }
 
-// Members: do missions, see vouchers and recent results.
+// Members: do missions, see points and recent results.
 export function MissionsPanel() {
   const [state, setState] = useState<State | null>(null);
   useEffect(() => { fetch("/api/club/missions").then((r) => r.json()).then(setState).catch(() => {}); }, []);
@@ -114,9 +114,9 @@ export function MissionsPanel() {
       <div className="missions-head">
         <div>
           <h3 className="ck-h">Missions · 任务</h3>
-          <p className="muted">Each approved mission gives you a one-time <strong>5% off voucher</strong>. Use them at checkout on top of your tier discount, up to <strong>{Math.round(MAX_STACKED * 100)}% off</strong> per order.</p>
+          <p className="muted">Each approved mission earns you <strong>{MISSION_POINTS} points</strong>. Points help you move up a tier, and you can trade {REDEEM_BLOCK} points for <strong>${REDEEM_VALUE} off</strong> or spend them in the pet shop.</p>
         </div>
-        <div className="voucher-pill"><b>{state?.vouchers ?? "–"}</b><span>voucher{state?.vouchers === 1 ? "" : "s"} ready</span></div>
+        <div className="voucher-pill"><b>{state?.points ?? "–"}</b><span>points</span></div>
       </div>
       <div className="mission-grid">
         {MISSIONS.map((m) => (
@@ -129,7 +129,7 @@ export function MissionsPanel() {
           <ul>
             {state.history.map((h) => (
               <li key={h.id}>
-                <span className={`st st-${h.status}`}>{h.status === "approved" ? (h.used ? "Used" : "Approved") : "Not approved"}</span>
+                <span className={`st st-${h.status}`}>{h.status === "approved" ? `+${MISSION_POINTS} pts` : "Not approved"}</span>
                 <strong>{label(h.mission)}</strong>
                 <em>{h.reason}</em>
               </li>
@@ -149,8 +149,8 @@ export function MissionsPreview() {
       <div className="wrap">
         <div className="section-head center">
           <span className="eyebrow center-eyebrow"><span className="eyebrow-zh">会员任务</span><span className="eyebrow-en">Missions</span></span>
-          <h2 className="section-title">Share the joy, earn <em>5% off</em>.</h2>
-          <p className="section-lede">Post about JoyJar or recommend us to a friend, upload a screenshot, and get a 5% voucher for each. Stack them with your tier discount, up to {Math.round(MAX_STACKED * 100)}% off an order.</p>
+          <h2 className="section-title">Share the joy, earn <em>points</em>.</h2>
+          <p className="section-lede">Post about JoyJar or recommend us to a friend, upload a screenshot, and get {MISSION_POINTS} points for each. Every {REDEEM_BLOCK} points is ${REDEEM_VALUE} off an order.</p>
         </div>
         <div className="mission-grid">
           {MISSIONS.map((m) => <MissionCard key={m.id} m={m} onResult={() => {}} />)}

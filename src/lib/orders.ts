@@ -1,18 +1,25 @@
 import crypto from "crypto";
 import { prisma } from "./db";
 import { cartSubtotal, deliveryFee } from "./cartUtils";
+import { sendOrderEmail } from "./email";
+import { revalidatePath } from "next/cache";
+
+// product pages are cached for an hour; refresh them when stock changes
+export function refreshShop() {
+  try { revalidatePath("/"); revalidatePath("/product/[id]", "page"); } catch {}
+}
 
 export const HITPAY_API = process.env.HITPAY_API_URL || "https://api.sandbox.hit-pay.com/v1";
 
 const clampQty = (n: any) => Math.max(1, Math.min(99, Math.floor(Number(n) || 0)));
 
 // Re-check a cart from the browser against the database and price it on the server.
-export async function priceCart(rawCart: any[], opts: { pickup: boolean; zoneId?: string; discountRate: number; freeDelivery?: boolean }) {
-  const [products, bundles, config, zones] = await Promise.all([
+// Delivery only (no self-collection). Throws a friendly message if something's off or sold out.
+export async function priceCart(rawCart: any[]) {
+  const [products, bundles, config] = await Promise.all([
     prisma.product.findMany({ where: { available: true } }),
     prisma.bundle.findMany(),
     prisma.deliveryConfig.findUnique({ where: { id: 1 } }),
-    prisma.deliveryZone.findMany(),
   ]);
   const productIds = new Set(products.map((p) => p.id));
   if (!Array.isArray(rawCart) || rawCart.length === 0) throw new Error("Your cart is empty.");
@@ -33,12 +40,53 @@ export async function priceCart(rawCart: any[], opts: { pickup: boolean; zoneId?
     return { box: false, productId: String(it.productId), bundleId: b.id, qty, options };
   });
 
+  // stock: only for flavours we're counting
+  const need = jarsByProduct(cart, bundles);
+  for (const p of products) {
+    if (p.stock == null || !need[p.id]) continue;
+    if (p.stock <= 0) throw new Error(`Sorry, ${p.flavorEn} is sold out right now. Please remove it from your cart.`);
+    if (need[p.id] > p.stock) throw new Error(`Sorry, we only have ${p.stock} ${p.flavorEn} jar${p.stock === 1 ? "" : "s"} left.`);
+  }
+
   const subtotal = cartSubtotal(cart, products, bundles);
-  const zone = zones.find((z) => z.id === opts.zoneId) || zones[0];
-  const ship = opts.pickup || opts.freeDelivery ? 0 : deliveryFee(cart, zone, config, products, bundles);
-  const discount = Math.round(subtotal * (opts.discountRate || 0) * 100) / 100;
-  const total = Math.round((subtotal - discount + ship) * 100) / 100;
-  return { cart, subtotal, discount, ship, total, zone };
+  const ship = deliveryFee(cart, null, config, products, bundles);
+  return { cart, subtotal, ship, products };
+}
+
+// How many jars of each flavour a cart uses.
+export function jarsByProduct(cart: any[], bundles: { id: string; qty: number }[]) {
+  const need: Record<string, number> = {};
+  for (const it of cart) {
+    if (it.box) for (const c of it.contents || []) need[c.productId] = (need[c.productId] || 0) + it.qty;
+    else {
+      const per = bundles.find((b) => b.id === it.bundleId)?.qty || 1;
+      need[it.productId] = (need[it.productId] || 0) + per * it.qty;
+    }
+  }
+  return need;
+}
+
+// The only place an order becomes paid (webhook or confirmation page, whichever is first).
+// Takes stock off once and emails the shop once.
+export async function markPaid(num: string) {
+  const res = await prisma.order.updateMany({ where: { num, status: { not: "paid" } }, data: { status: "paid" } });
+  if (!res.count) return;
+  const order = await prisma.order.findUnique({ where: { num } });
+  if (!order) return;
+  try {
+    const claim = await prisma.order.updateMany({ where: { id: order.id, stockApplied: false }, data: { stockApplied: true } });
+    if (claim.count) {
+      const bundles = await prisma.bundle.findMany({ select: { id: true, qty: true } });
+      const need = jarsByProduct(JSON.parse(order.items || "[]"), bundles);
+      const done = await Promise.all(Object.entries(need).map(([id, n]) =>
+        prisma.product.updateMany({ where: { id, stock: { not: null } }, data: { stock: { decrement: n } } })));
+      if (done.some((d) => d.count)) refreshShop();
+    }
+  } catch (e) { console.error("stock update failed", order.num, e); }
+  try {
+    const first = await prisma.order.updateMany({ where: { id: order.id, notified: false }, data: { notified: true } });
+    if (first.count) await sendOrderEmail(order);
+  } catch (e) { console.error("order email failed", order.num, e); }
 }
 
 export function newOrderNum() {

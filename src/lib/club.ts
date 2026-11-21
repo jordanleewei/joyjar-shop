@@ -3,31 +3,36 @@
 
 export type Tier = {
   id: string; en: string; zh: string;
-  min: number;        // lifetime spend (SGD, paid orders) needed to reach this tier
-  discount: number;   // fraction off the jar subtotal
+  min: number;        // lifetime points needed to reach this tier
   perks: string[];
-  unlocks: string[];  // pet accessories unlocked at this tier
+  unlocks: string[];  // pet accessories this tier lets you buy in the pet shop
 };
 
 export const TIERS: Tier[] = [
-  { id: "pearl",   en: "Pearl",   zh: "珍珠", min: 0,   discount: 0,
-    perks: ["5% welcome discount on your first order", "Your own member card & fish maw pet", "Earn 5% vouchers by completing missions", "Pet accessories: bow, flower, cap"],
+  { id: "pearl",   en: "Pearl",   zh: "珍珠", min: 0,
+    perks: ["5% welcome discount on your first order", "1 point for every $1 you spend", "5 points for every mission", "Pet shop: bow, flower, cap"],
     unlocks: ["none", "bow", "flower", "cap"] },
-  { id: "jade",    en: "Jade",    zh: "翡翠", min: 100, discount: 0.05,
-    perks: ["5% off every order", "Pet accessories: leaf, glasses, bow tie"],
+  { id: "jade",    en: "Jade",    zh: "翡翠", min: 200,
+    perks: ["Jade badge on your member card", "Pet shop: leaf, glasses, bow tie"],
     unlocks: ["leaf", "glasses", "bowtie"] },
-  { id: "gold",    en: "Gold",    zh: "黄金", min: 250, discount: 0.10,
-    perks: ["10% off every order", "Pet accessories: star, chef hat, headphones"],
+  { id: "gold",    en: "Gold",    zh: "黄金", min: 400,
+    perks: ["Gold badge on your member card", "Pet shop: star, chef hat, headphones"],
     unlocks: ["star", "chef", "headphones"] },
-  { id: "diamond", en: "Diamond", zh: "钻石", min: 500, discount: 0.15,
-    perks: ["15% off every order", "Free delivery on every order", "Pet accessories: crown, tiara, halo"],
+  { id: "diamond", en: "Diamond", zh: "钻石", min: 600,
+    perks: ["Diamond badge on your member card", "Pet shop: crown, tiara, halo"],
     unlocks: ["crown", "tiara", "halo"] },
 ];
 
-export const MAX_STACKED = 0.35;   // most a member can take off one order
-export const WELCOME_RATE = 0.05;  // first order as a member
-export const VOUCHER_RATE = 0.05;  // per approved mission
-export const FREE_DELIVERY_FROM_TIER = 3; // Diamond only
+// ---- points ----
+export const POINTS_PER_DOLLAR = 1;  // on the jars, after any discount (not delivery)
+export const MISSION_POINTS = 5;     // per approved mission
+export const REDEEM_BLOCK = 100;     // points per redemption step…
+export const REDEEM_VALUE = 5;       // …worth $5 off
+export const WELCOME_RATE = 0.05;    // first order as a member
+
+export function pointsFor(amount: number) {
+  return Math.max(0, Math.floor(amount * POINTS_PER_DOLLAR + 1e-9));
+}
 
 export type Mission = {
   id: string; en: string; zh: string; platform: string; how: string;
@@ -50,15 +55,21 @@ export const MISSIONS: Mission[] = [
 ];
 
 
-export function tierFor(spend: number) {
+// tier from lifetime points (spending points never lowers your tier)
+export function tierFor(points: number) {
   let idx = 0;
-  TIERS.forEach((t, i) => { if (spend >= t.min) idx = i; });
+  TIERS.forEach((t, i) => { if (points >= t.min) idx = i; });
   const tier = TIERS[idx];
   const next = TIERS[idx + 1] || null;
-  const progress = next ? Math.min(1, (spend - tier.min) / (next.min - tier.min)) : 1;
-  return { tier, next, progress, toNext: next ? Math.max(0, next.min - spend) : 0, index: idx };
+  const progress = next ? Math.min(1, (points - tier.min) / (next.min - tier.min)) : 1;
+  return { tier, next, progress, toNext: next ? Math.max(0, next.min - points) : 0, index: idx };
 }
 
+export function tierOfAccessory(id: string) {
+  return TIERS.findIndex((t) => t.unlocks.includes(id));
+}
+
+// accessories this tier is allowed to buy
 export function unlockedAccessories(tierIndex: number) {
   return TIERS.slice(0, tierIndex + 1).flatMap((t) => t.unlocks);
 }
@@ -111,12 +122,22 @@ export const PET_COLOURS = [
   { id: "pink",  fill: "#f4b7c2", shade: "#d48691" },
   { id: "green", fill: "#c4dca6", shade: "#88ad6a" },
 ];
+// cost = points in the pet shop. "none" and the bow are free for everyone.
 export const ACCESSORIES = [
-  { id: "none", en: "None" },
-  { id: "bow", en: "🎀 Bow" }, { id: "flower", en: "🌸 Flower" }, { id: "cap", en: "🧢 Cap" },
-  { id: "leaf", en: "🌿 Leaf" }, { id: "glasses", en: "👓 Glasses" }, { id: "bowtie", en: "🤵 Bow tie" },
-  { id: "star", en: "⭐ Star" }, { id: "chef", en: "👨‍🍳 Chef hat" }, { id: "headphones", en: "🎧 Headphones" },
-  { id: "crown", en: "👑 Crown" }, { id: "tiara", en: "💎 Tiara" }, { id: "halo", en: "😇 Halo" },
+  { id: "none", en: "None", cost: 0 },
+  { id: "bow", en: "🎀 Bow", cost: 0 }, { id: "flower", en: "🌸 Flower", cost: 20 }, { id: "cap", en: "🧢 Cap", cost: 20 },
+  { id: "leaf", en: "🌿 Leaf", cost: 40 }, { id: "glasses", en: "👓 Glasses", cost: 50 }, { id: "bowtie", en: "🤵 Bow tie", cost: 50 },
+  { id: "star", en: "⭐ Star", cost: 80 }, { id: "chef", en: "👨‍🍳 Chef hat", cost: 80 }, { id: "headphones", en: "🎧 Headphones", cost: 100 },
+  { id: "crown", en: "👑 Crown", cost: 150 }, { id: "tiara", en: "💎 Tiara", cost: 150 }, { id: "halo", en: "😇 Halo", cost: 200 },
+];
+export const FREE_ACCESSORIES = ACCESSORIES.filter((a) => a.cost === 0).map((a) => a.id);
+
+// treats to feed your pet (bought in packs, eaten one at a time)
+export const TREATS = [
+  { id: "shrimp", emoji: "🦐", en: "Shrimp snacks", zh: "虾虾零食", pack: 5, cost: 5 },
+  { id: "pudding", emoji: "🍮", en: "Mini puddings", zh: "迷你布丁", pack: 3, cost: 6 },
+  { id: "mooncake", emoji: "🥮", en: "Mooncakes", zh: "月饼", pack: 2, cost: 8 },
+  { id: "cake", emoji: "🍰", en: "Party cake", zh: "派对蛋糕", pack: 1, cost: 10 },
 ];
 
 export type CardDesign = {
@@ -162,29 +183,28 @@ export function memberNo(num: number) {
 }
 
 // ---- member discounts (shared by checkout page and server) ----
+// One discount per order, no stacking: the first-order welcome 5% OR points (100 = $5 off).
 export type DiscountOptions = {
-  tier: { rate: number; label: string } | null;
   welcome: { rate: number; label: string } | null;
-  vouchers: { id: string; rate: number; label: string }[];
-  freeDelivery: boolean;
-  cap: number;
+  points: number; // spendable balance
 };
+export type DiscountChoice = { kind?: "none" | "welcome" | "points"; blocks?: number };
 
-export type DiscountChoice = { tier?: boolean; welcome?: boolean; vouchers?: string[] };
-
-// Pure: same maths on the client (preview) and server (truth). Applies tier, then
-// welcome, then vouchers until the cap; vouchers that wouldn't fit aren't used.
-export function stackDiscounts(opts: DiscountOptions, choice: DiscountChoice) {
-  const parts: { kind: string; label: string; rate: number; id?: string }[] = [];
-  let rate = 0;
-  const add = (p: { kind: string; label: string; rate: number; id?: string }) => {
-    if (rate + p.rate > opts.cap + 1e-9) return false;
-    parts.push(p); rate += p.rate; return true;
-  };
-  if (choice.tier && opts.tier) add({ kind: "tier", ...opts.tier });
-  if (choice.welcome && opts.welcome) add({ kind: "welcome", ...opts.welcome });
-  const wanted = new Set(choice.vouchers || []);
-  for (const v of opts.vouchers) if (wanted.has(v.id)) add({ kind: "voucher", ...v });
-  return { rate: Math.round(rate * 100) / 100, parts };
+export function maxBlocks(balance: number, subtotal: number) {
+  return Math.max(0, Math.min(Math.floor(balance / REDEEM_BLOCK), Math.floor(subtotal / REDEEM_VALUE)));
 }
 
+// Pure: same maths on the client (preview) and the server (truth).
+export function applyDiscount(opts: DiscountOptions | null, choice: DiscountChoice, subtotal: number) {
+  const none = { kind: "none" as const, amount: 0, pointsUsed: 0, label: "" };
+  if (!opts) return none;
+  if (choice.kind === "welcome" && opts.welcome) {
+    return { kind: "welcome" as const, amount: Math.round(subtotal * opts.welcome.rate * 100) / 100, pointsUsed: 0, label: opts.welcome.label };
+  }
+  if (choice.kind === "points") {
+    const blocks = Math.max(0, Math.min(Math.floor(Number(choice.blocks) || 0), maxBlocks(opts.points, subtotal)));
+    if (!blocks) return none;
+    return { kind: "points" as const, amount: blocks * REDEEM_VALUE, pointsUsed: blocks * REDEEM_BLOCK, label: `${blocks * REDEEM_BLOCK} points` };
+  }
+  return none;
+}

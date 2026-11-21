@@ -3,14 +3,14 @@
 import crypto from "crypto";
 import { prisma } from "./db";
 import { MISSIONS, Mission } from "./club";
-import { availableVouchers } from "./discounts";
+import { pointsSummary } from "./points";
 
 export const AI_MODEL = process.env.MISSION_AI_MODEL || "nvidia/nemotron-3.5-super-vl:free";
 const DAILY_ATTEMPTS = 6;
 
 export async function missionState(memberId: string) {
   const claims = await prisma.missionClaim.findMany({ where: { memberId }, orderBy: { createdAt: "desc" }, take: 60 });
-  const vouchers = await availableVouchers(memberId);
+  const pts = await pointsSummary(memberId);
   const now = Date.now();
   const missions = MISSIONS.map((m) => {
     const approved = claims.filter((c) => c.mission === m.id && c.status === "approved");
@@ -25,10 +25,9 @@ export async function missionState(memberId: string) {
   });
   return {
     missions,
-    vouchers: vouchers.length,
+    points: pts.balance,
     history: claims.slice(0, 12).map((c) => ({
-      id: c.id, mission: c.mission, status: c.status, reason: c.reason,
-      date: c.createdAt.toISOString(), used: !!c.usedOrderId && !vouchers.some((v) => v.id === c.id) && c.status === "approved",
+      id: c.id, mission: c.mission, status: c.status, reason: c.reason, date: c.createdAt.toISOString(),
     })),
   };
 }

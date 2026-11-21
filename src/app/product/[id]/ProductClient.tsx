@@ -9,6 +9,7 @@ import { GiftBox3D } from "@/components/ui/GiftBox3D";
 import { OPTION_GROUPS, OPTION_ORDER, BOX_OPTIONS, optionDefaults, TONES } from "@/lib/constants";
 import { useCartStore } from "@/store/cartStore";
 import { priceStr } from "@/components/ui/ShopBlocks";
+import { isSoldOut } from "@/lib/cartUtils";
 
 export function ProductClient({ initialProduct, initialBundle, products, bundles }: any) {
   const router = useRouter();
@@ -64,13 +65,14 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
   }
 
   const price = packMode === "single" ? singleB.price * qty : boxB.price;
-  const canAdd = packMode === "single" ? true : mixTotal === target;
+  const liveOut = isSoldOut(live);
+  const canAdd = packMode === "single" ? !liveOut : mixTotal === target;
   const remaining = target - mixTotal;
 
   const inc = (id: string) => setMix((m) => mixTotal >= target ? m : { ...m, [id]: (m[id] || 0) + 1 });
   const fillOneEach = () => setMix(() => {
     const m: Record<string, number> = {};
-    products.slice(0, target).forEach((p: any) => { m[p.id] = 1; });
+    products.filter((p: any) => !isSoldOut(p)).slice(0, target).forEach((p: any) => { m[p.id] = 1; });
     return m;
   });
   const dec = (id: string) => setMix((m) => ({ ...m, [id]: Math.max(0, (m[id] || 0) - 1) }));
@@ -144,9 +146,9 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
                 <div className="opt-row opt-row-wrap">
                   {products.map((x: any) =>
                     <button key={x.id} data-nofish="1"
-                      className={`chip ${pid === x.id ? "is-on" : ""}`}
+                      className={`chip ${pid === x.id ? "is-on" : ""} ${isSoldOut(x) ? "is-soldout" : ""}`}
                       onClick={() => setPid(x.id)}>
-                      {x.flavorEn}<small>{x.flavorZh}</small>
+                      {x.flavorEn}<small>{isSoldOut(x) ? "Sold out · 售罄" : x.flavorZh}</small>
                     </button>
                   )}
                 </div>
@@ -163,14 +165,16 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
                 <div className="mix-list">
                   {products.map((x: any) => {
                     const c = mix[x.id] || 0;
+                    const out = isSoldOut(x);
+                    const atMax = out || (x.stock != null && c >= x.stock);
                     return (
-                      <div className={`mix-row ${c > 0 ? "is-picked" : ""}`} key={x.id}>
+                      <div className={`mix-row ${c > 0 ? "is-picked" : ""} ${out ? "is-soldout" : ""}`} key={x.id}>
                         <i className="mix-swatch" style={{ background: swatch(x) }} />
-                        <div className="mix-name"><strong>{x.flavorEn}</strong><small>{x.flavorZh}</small></div>
+                        <div className="mix-name"><strong>{x.flavorEn}</strong><small>{out ? "Sold out · 售罄" : x.flavorZh}</small></div>
                         <div className="mix-stepper">
                           <button className="mix-btn" data-nofish="1" onClick={() => dec(x.id)} disabled={c === 0} aria-label={"Remove " + x.flavorEn}>−</button>
                           <span className="mix-qty">{c}</span>
-                          <button className="mix-btn mix-btn-add" data-fish="1" onClick={() => inc(x.id)} disabled={mixTotal >= target} aria-label={"Add " + x.flavorEn}>+</button>
+                          <button className="mix-btn mix-btn-add" data-fish="1" onClick={() => inc(x.id)} disabled={mixTotal >= target || atMax} aria-label={"Add " + x.flavorEn}>+</button>
                         </div>
                       </div>);
                   })}
@@ -210,6 +214,7 @@ export function ProductClient({ initialProduct, initialBundle, products, bundles
               <Btn disabled={!canAdd} onClick={doAdd}>
                 {packMode === "box-mix" && mixTotal < target ?
                   `Pick ${remaining} more · 还差 ${remaining}` :
+                  packMode === "single" && liveOut ? "Sold out · 售罄" :
                   "Add to cart · 加入购物篮"}
               </Btn>
             </div>

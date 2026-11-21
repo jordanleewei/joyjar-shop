@@ -10,7 +10,7 @@ import { priceStr } from "@/components/ui/ShopBlocks";
 
 type OrderView = {
   num: string; status: string; slot: string; total: number; discount: number;
-  method: string; pickup: boolean; firstName: string; member: boolean;
+  method: string; pickup: boolean; firstName: string; member: boolean; points?: number;
 };
 
 function ConfirmContent() {
@@ -74,22 +74,19 @@ function ConfirmContent() {
 
         <div className="confirm-meta">
           <div><span>Order 订单</span><strong>{order.num}</strong></div>
-          <div><span>{order.pickup ? "Pick-up 自取" : "Delivery 配送"}</span><strong>{(order.slot || "").replace("Self Pick-up · ", "") || "TBC"}</strong></div>
+          <div><span>Delivery 配送</span><strong>We&apos;ll WhatsApp you</strong></div>
           <div><span>{paid ? "Paid 已付" : "Amount 金额"}</span><strong>{priceStr(order.total)} · {order.method === "paynow" ? "PayNow" : "Card"}</strong></div>
         </div>
 
-        {order.pickup ? (
-          <p className="confirm-note">
-            We&apos;ll WhatsApp you to confirm the exact pick-up address. Thank you{order.firstName ? `, ${order.firstName}` : ""}!
-          </p>
-        ) : (
-          <p className="confirm-note">
-            We self-deliver every jar by hand. {order.firstName ? `${order.firstName}, we` : "We"}&apos;ll text you before we arrive.
-          </p>
+        <p className="confirm-note">
+          We self-deliver every jar by hand. {order.firstName ? `${order.firstName}, we` : "We"}&apos;ll WhatsApp you to arrange a delivery time.
+        </p>
+        {paid && order.member && !!order.points && (
+          <p className="confirm-note">✨ You earned <strong>{order.points} points</strong> with this order.</p>
         )}
         {paid && !order.member && (
           <p className="confirm-note">
-            <Link href="/club" className="link-quiet">Join the JoyJar Club</Link> for 5% off your next order, free delivery at Diamond, and up to 35% off with missions.
+            <Link href="/club" className="link-quiet">Join the JoyJar Club</Link> for 5% off your first order and 1 point for every $1 you spend.
           </p>
         )}
         {!paid && (

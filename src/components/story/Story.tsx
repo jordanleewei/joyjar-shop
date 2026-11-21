@@ -296,11 +296,11 @@ export function ClubTeaser() {
         </div>
         <div className="club-teaser-copy">
           <Label zh="小胶傲俱乐部">JoyJar Club</Label>
-          <h2 className="section-title">Level up. Get a pet.<br /><em>Save on every jar.</em></h2>
+          <h2 className="section-title">Collect points. Get a pet.<br /><em>Treat yourself.</em></h2>
           <p className="section-lede">Free to join. Design your own member card with your avatar and a cute fish maw pet. It lives in your account, forever.</p>
           <div className="club-chips">
             <span>5% off your first order</span>
-            <span>Up to 35% off with tiers + missions</span>
+            <span>1 point for every $1 · 100 points = $5 off</span>
             <span>Your avatar + a fish maw pet</span>
             <span>Pearl → Jade → Gold → Diamond</span>
           </div>

@@ -27,9 +27,11 @@ export function cartSubtotal(cart: any[], products: any[], bundles: any[]) {
   return cart.reduce((s, it) => s + lineFor(it, products, bundles).total, 0);
 }
 
-export function deliveryFee(cart: any[], zone: any, deliveryConfig: any, products: any[], bundles: any[]) {
+// Same fee for every region; free over the threshold.
+export function deliveryFee(cart: any[], _zone: any, deliveryConfig: any, products: any[], bundles: any[]) {
   if (!cart.length) return 0;
   if (cartSubtotal(cart, products, bundles) >= (deliveryConfig?.freeThreshold || 50)) return 0;
-  if (zone && zone.fee != null) return Number(zone.fee);
   return Number(deliveryConfig?.baseFee || 6);
 }
+
+export const isSoldOut = (p: { stock?: number | null }) => p.stock != null && p.stock <= 0;
