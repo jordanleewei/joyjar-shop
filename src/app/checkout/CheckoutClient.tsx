@@ -13,6 +13,7 @@ import { checkoutSwim } from "@/components/ui/Fish";
 import Link from "next/link";
 import { applyDiscount, maxBlocks, DiscountOptions, REDEEM_BLOCK, REDEEM_VALUE, pointsFor } from "@/lib/club";
 import { REGIONS, regionFromPostal } from "@/lib/regions";
+import { deliveryDates, dateParts, formatDate } from "@/lib/dates";
 
 
 function Field({ id, label, zh, value, onChange, onBlur, placeholder, type = "text", wide, required, optional, error, inputMode, autoComplete }: any) {
@@ -31,7 +32,7 @@ function Field({ id, label, zh, value, onChange, onBlur, placeholder, type = "te
 }
 
 // What's still needed before paying (shown inline and in the summary)
-function validate(form: any, region: string) {
+function validate(form: any, region: string, date: string) {
   const e: Record<string, string> = {};
   const digits = (form.phone || "").replace(/\D/g, "");
   if (!form.name.trim()) e.name = "Add your name so we know who it's for.";
@@ -41,10 +42,12 @@ function validate(form: any, region: string) {
   if (!form.addr.trim()) e.addr = "Add your street and block number.";
   if (!/^\d{6}$/.test((form.postal || "").trim())) e.postal = form.postal.trim() ? "Singapore postal codes have 6 digits." : "Add your 6-digit postal code.";
   if (!region) e.region = "Pick the region you're in.";
+  if (!date) e.date = "Pick a day for your delivery.";
   return e;
 }
-const FIELD_LABEL: Record<string, string> = { name: "Full name", phone: "Phone", email: "Email", addr: "Address", postal: "Postal code", region: "Region" };
-const FIELD_ORDER = ["name", "phone", "email", "addr", "postal", "region"];
+const FIELD_LABEL: Record<string, string> = { name: "Full name", phone: "Phone", email: "Email", addr: "Address", postal: "Postal code", region: "Region", date: "Delivery date" };
+const FIELD_ORDER = ["name", "phone", "email", "addr", "postal", "region", "date"];
+const VISIBLE_DATES = 5;
 
 export function CheckoutClient({ products, bundles, deliveryConfig, member }: any) {
   const router = useRouter();
@@ -54,6 +57,9 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
   const [form, setForm] = useState({ name: member?.name || "", phone: "", email: member?.email || "", addr: "", unit: "", postal: "", note: "" });
   const [region, setRegion] = useState("");
   const [regionPicked, setRegionPicked] = useState(false); // customer chose it themselves
+  const [dates] = useState(() => deliveryDates());
+  const [date, setDate] = useState("");
+  const [dateOffset, setDateOffset] = useState(0);
   const [pay, setPay] = useState("paynow");
   const [swimming, setSwimming] = useState(false);
 
@@ -87,15 +93,15 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
     const guess = regionFromPostal(v);
     if (guess && !regionPicked) setRegion(guess); // suggest; never override their own choice
   };
-  const errors = validate(form, region);
+  const errors = validate(form, region, date);
   const missing = FIELD_ORDER.filter((k) => errors[k]);
   const ready = missing.length === 0;
   const err = (k: string) => (showAll || touched[k] ? errors[k] : undefined);
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const contactDone = !errors.name && !errors.phone && !errors.email;
-  const deliveryDone = !errors.addr && !errors.postal && !errors.region;
+  const deliveryDone = !errors.addr && !errors.postal && !errors.region && !errors.date;
   const goTo = (k: string) => {
-    const el = (k === "region" ? document.querySelector("#f-region button") : document.getElementById(`f-${k}`)) as HTMLInputElement | null;
+    const el = (k === "region" || k === "date" ? document.querySelector(`#f-${k} button:not(:disabled)`) : document.getElementById(`f-${k}`)) as HTMLInputElement | null;
     if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => el.focus({ preventScroll: true }), 350); }
   };
   const goSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -112,7 +118,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
       const res = await fetch("/api/create-hitpay-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart, form, region, pay, discount: { kind: applied.kind, blocks } })
+        body: JSON.stringify({ cart, form, region, date, pay, discount: { kind: applied.kind, blocks } })
       });
       const data = await res.json();
 
@@ -173,7 +179,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
             <section className="ck-block" id="ck-delivery">
               <h3 className="ck-h"><span className={`ck-num ${deliveryDone ? "is-done" : ""}`}>{deliveryDone ? "✓" : "2"}</span>Delivery · 配送</h3>
 
-              <p className="ck-sub">We deliver chilled, ourselves, all around Singapore. We&apos;ll WhatsApp you to arrange a time.</p>
+              <p className="ck-sub">We deliver chilled, ourselves, all around Singapore. Pick a day and we&apos;ll WhatsApp you before we arrive.</p>
               <div className="field-grid">
                 <Field id="f-addr" label="Address" zh="地址" value={form.addr} onChange={set("addr")} onBlur={blur("addr")} placeholder="Block 123, Joy Street 4" wide required error={err("addr")} autoComplete="street-address" />
                 <Field id="f-unit" label="Unit" zh="单位" value={form.unit} onChange={set("unit")} placeholder="#12-34" optional />
@@ -190,6 +196,28 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
                 ))}
               </div>
               {err("region") && <span className="field-err">{errors.region}</span>}
+
+              <span className="opt-label">Delivery date · 配送日期</span>
+              <div className="date-picker-wrap" id="f-date">
+                <button type="button" className="date-arrow" data-nofish="1" disabled={dateOffset === 0}
+                  onClick={() => setDateOffset((o) => Math.max(0, o - VISIBLE_DATES))} aria-label="Earlier dates">‹</button>
+                <div className="date-row" role="radiogroup" aria-label="Delivery date">
+                  {dates.slice(dateOffset, dateOffset + VISIBLE_DATES).map((d) => {
+                    const p = dateParts(d);
+                    return (
+                      <button key={d} type="button" role="radio" aria-checked={date === d} data-nofish="1"
+                        className={`date-chip ${date === d ? "is-on" : ""}`} onClick={() => setDate(d)}>
+                        <span className="date-day">{p.day}</span>
+                        <span className="date-num">{p.date} {p.month}</span>
+                        <small>{p.dayZh}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button type="button" className="date-arrow" data-nofish="1" disabled={dateOffset + VISIBLE_DATES >= dates.length}
+                  onClick={() => setDateOffset((o) => Math.min(dates.length - VISIBLE_DATES, o + VISIBLE_DATES))} aria-label="Later dates">›</button>
+              </div>
+              {err("date") && <span className="field-err">{errors.date}</span>}
 
               <Field id="f-note" label="Note for delivery" zh="备注" value={form.note} onChange={set("note")} placeholder="Gift message, buzzer code…" wide optional />
             </section>
@@ -240,6 +268,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
                 <p className={errors.addr ? "review-empty" : ""}>{form.addr.trim() ? `${form.addr.trim()}${form.unit.trim() ? `, ${form.unit.trim()}` : ""}` : "Your address"}</p>
                 <p className={errors.postal ? "review-empty" : ""}>{form.postal.trim() ? `Singapore ${form.postal.trim()}` : "Postal code"}</p>
                 <p className={region ? "" : "review-empty"}>{region ? `${REGIONS.find((r) => r.id === region)?.en} region` : "Region"}</p>
+                <p className={date ? "" : "review-empty"}>{date ? `Delivery on ${formatDate(date)}` : "Delivery date"}</p>
                 {form.note.trim() && <p className="review-note">“{form.note.trim()}”</p>}
               </div>
               <div className="review-sec">

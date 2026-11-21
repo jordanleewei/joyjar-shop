@@ -2,6 +2,7 @@
 // Needs RESEND_API_KEY and ORDER_EMAIL_TO in Vercel. Without them it quietly does nothing
 // (orders are always in the admin page).
 import { regionName } from "./regions";
+import { formatDate } from "./dates";
 
 const esc = (s: any) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 const money = (n: number) => "$" + Number(n || 0).toFixed(2);
@@ -35,6 +36,7 @@ export async function sendOrderEmail(order: any) {
   <div style="font-family:Arial,sans-serif;font-size:15px;color:#2c2823;max-width:560px">
     <h2 style="margin:0 0 4px">New order ${esc(order.num)} 🎉</h2>
     <p style="margin:0 0 16px;color:#6b6358">${money(order.total)} paid by ${order.method === "card" ? "card" : "PayNow"} · ${esc(regionName(order.region))}</p>
+    ${formatDate(order.slot) ? `<p style="margin:0 0 16px;font-size:17px"><b>Deliver on ${esc(formatDate(order.slot))}</b></p>` : ""}
     <h3 style="margin:16px 0 6px">Deliver to</h3>
     <p style="margin:0;line-height:1.5"><b>${esc(c.name)}</b><br>${esc(c.phone)}${c.email ? "<br>" + esc(c.email) : ""}<br>
     ${esc(c.addr)}${c.unit ? ", " + esc(c.unit) : ""}<br>Singapore ${esc(c.postal)}</p>
@@ -44,13 +46,13 @@ export async function sendOrderEmail(order: any) {
     <p style="margin:12px 0 0;line-height:1.6">Subtotal ${money(order.subtotal)}${order.discount ? `<br>Discount −${money(order.discount)}` : ""}<br>Delivery ${order.deliveryFee ? money(order.deliveryFee) : "Free"}<br><b>Total ${money(order.total)}</b></p>
     <p style="margin:20px 0 0"><a href="${site}/admin" style="background:#2f4a34;color:#fff;padding:10px 16px;border-radius:999px;text-decoration:none">Open orders · print label</a></p>
   </div>`;
-  const text = [`New order ${order.num} · ${money(order.total)} · ${regionName(order.region)}`, "", c.name, c.phone, c.email || "",
+  const text = [`New order ${order.num} · ${money(order.total)} · ${regionName(order.region)}`, formatDate(order.slot) ? `Deliver on ${formatDate(order.slot)}` : "", "", c.name, c.phone, c.email || "",
     `${c.addr}${c.unit ? ", " + c.unit : ""}`, `Singapore ${c.postal}`, c.note ? `Note: ${c.note}` : "", "", ...lines, "", `${site}/admin`].filter((x) => x !== undefined).join("\n");
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: to.split(",").map((s) => s.trim()).filter(Boolean), subject: `New JoyJar order ${order.num} · ${money(order.total)} · ${regionName(order.region)}`, html, text }),
+    body: JSON.stringify({ from, to: to.split(",").map((s) => s.trim()).filter(Boolean), subject: `New JoyJar order ${order.num} · ${formatDate(order.slot) ? formatDate(order.slot) + " · " : ""}${regionName(order.region)}`, html, text }),
   });
   if (!res.ok) console.error("Resend error", res.status, (await res.text()).slice(0, 300));
 }

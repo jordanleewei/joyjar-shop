@@ -6,12 +6,13 @@ import { discountOptions, applyDiscount } from '@/lib/discounts';
 import { pointsSummary, lockMember } from '@/lib/points';
 import { pointsFor } from '@/lib/club';
 import { REGIONS } from '@/lib/regions';
+import { isDeliveryDate } from '@/lib/dates';
 
 // Prices the cart on the server, saves a pending order, then opens a HitPay payment request.
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cart, form = {}, region = "", pay = "paynow", discount = {} } = body || {};
+    const { cart, form = {}, region = "", date = "", pay = "paynow", discount = {} } = body || {};
 
     const hitpayApiKey = process.env.HITPAY_API_KEY;
     if (!hitpayApiKey) {
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     }
     const regionId = REGIONS.some((r) => r.id === region) ? String(region) : '';
     if (!regionId) return NextResponse.json({ error: 'Please choose your delivery region.' }, { status: 400 });
+    if (!isDeliveryDate(String(date))) return NextResponse.json({ error: 'Please pick a delivery date from tomorrow onwards.' }, { status: 400 });
 
     let priced;
     try {
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
             addr: String(form.addr || "").slice(0, 300), unit: String(form.unit || "").slice(0, 40),
             postal: String(form.postal || "").trim().slice(0, 20), note: String(form.note || "").slice(0, 500),
           }),
-          slot: "",
+          slot: String(date), // delivery date, YYYY-MM-DD
           zoneId: regionId,
           region: regionId,
           subtotal: priced.subtotal,

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
+import { formatDate } from "@/lib/dates";
 import { checkoutSwim } from "@/components/ui/Fish";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -74,12 +75,12 @@ function ConfirmContent() {
 
         <div className="confirm-meta">
           <div><span>Order 订单</span><strong>{order.num}</strong></div>
-          <div><span>Delivery 配送</span><strong>We&apos;ll WhatsApp you</strong></div>
+          <div><span>Delivery 配送</span><strong>{formatDate(order.slot) || "We'll WhatsApp you"}</strong></div>
           <div><span>{paid ? "Paid 已付" : "Amount 金额"}</span><strong>{priceStr(order.total)} · {order.method === "paynow" ? "PayNow" : "Card"}</strong></div>
         </div>
 
         <p className="confirm-note">
-          We self-deliver every jar by hand. {order.firstName ? `${order.firstName}, we` : "We"}&apos;ll WhatsApp you to arrange a delivery time.
+          We self-deliver every jar by hand. {order.firstName ? `${order.firstName}, we` : "We"}&apos;ll WhatsApp you before we arrive.
         </p>
         {paid && order.member && !!order.points && (
           <p className="confirm-note">✨ You earned <strong>{order.points} points</strong> with this order.</p>

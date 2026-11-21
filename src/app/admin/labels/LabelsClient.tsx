@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { REGIONS } from "@/lib/regions";
+import { formatDate } from "@/lib/dates";
 import type { AdminOrder } from "@/lib/adminData";
 
 // Two layouts: one 4×6" (100×150mm) label per page for label printers, or 8 per A4 sticker sheet.
@@ -30,7 +31,7 @@ export function LabelsClient({ orders }: { orders: AdminOrder[] }) {
             <div className="lbl" key={o.num}>
               <div className="lbl-top">
                 <span className="lbl-region">{r ? <>{r.en.toUpperCase()} <small>{r.zh}</small></> : "NO REGION"}</span>
-                <span className="lbl-num">{o.num}</span>
+                <span className="lbl-num">{o.date ? formatDate(o.date) + " · " : ""}{o.num}</span>
               </div>
               <div className="lbl-to">
                 <span className="lbl-k">TO</span>

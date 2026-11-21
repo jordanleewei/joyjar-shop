@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { REGIONS } from "@/lib/regions";
+import { formatDate } from "@/lib/dates";
 import type { AdminOrder } from "@/lib/adminData";
 
 type View = "new" | "packed" | "delivered" | "all" | "unpaid";
@@ -28,6 +29,7 @@ export function OrdersClient({ paid, unpaid }: { paid: AdminOrder[]; unpaid: Adm
   const [orders, setOrders] = useState(paid);
   const [view, setView] = useState<View>("new");
   const [region, setRegion] = useState<string>("all");
+  const [day, setDay] = useState<string>("all");
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -40,7 +42,8 @@ export function OrdersClient({ paid, unpaid }: { paid: AdminOrder[]; unpaid: Adm
     if (!s) return true;
     return [o.num, o.name, o.phone, o.postal, o.addr, o.email].some((v) => v.toLowerCase().includes(s));
   };
-  const searched = base.filter(matches);
+  const days = [...new Set(base.map((o) => o.date))].sort((a, b) => (a || "9").localeCompare(b || "9"));
+  const searched = base.filter(matches).filter((o) => day === "all" || o.date === day);
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: searched.length };
     for (const o of searched) c[o.region] = (c[o.region] || 0) + 1;
@@ -51,7 +54,7 @@ export function OrdersClient({ paid, unpaid }: { paid: AdminOrder[]; unpaid: Adm
   // group by region, then by postal code so nearby addresses sit together
   const groups = REGION_ORDER.map((r) => ({
     id: r,
-    list: shown.filter((o) => o.region === r).sort((a, b) => a.postal.localeCompare(b.postal) || a.createdAt.localeCompare(b.createdAt)),
+    list: shown.filter((o) => o.region === r).sort((a, b) => (a.date || "9").localeCompare(b.date || "9") || a.postal.localeCompare(b.postal) || a.createdAt.localeCompare(b.createdAt)),
   })).filter((g) => g.list.length);
 
   const viewCount = (v: View) => v === "unpaid" ? unpaid.length : v === "all" ? orders.length : orders.filter((o) => o.fulfil === v).length;
@@ -81,6 +84,10 @@ export function OrdersClient({ paid, unpaid }: { paid: AdminOrder[]; unpaid: Adm
           <h1>Orders · 订单</h1>
           <p className="adm-muted">{viewCount("new")} to pack ({jarsToPack} jars) · {viewCount("packed")} packed, out for delivery</p>
         </div>
+        <select className="adm-day" value={day} onChange={(e) => { setDay(e.target.value); setSel(new Set()); }} aria-label="Delivery date">
+          <option value="all">All delivery dates</option>
+          {days.map((d) => <option key={d || "none"} value={d}>{d ? formatDate(d) : "No date"} ({base.filter((o) => o.date === d).length})</option>)}
+        </select>
         <input className="adm-search" type="search" placeholder="Search name, phone, postal code, order no." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
@@ -122,7 +129,8 @@ export function OrdersClient({ paid, unpaid }: { paid: AdminOrder[]; unpaid: Adm
                 <article key={o.num} className={`adm-order ${sel.has(o.num) ? "is-sel" : ""}`}>
                   <div className="adm-order-top">
                     <label className="adm-check"><input type="checkbox" checked={sel.has(o.num)} onChange={() => toggle(o.num)} aria-label={`Select ${o.num}`} /> <strong>{o.num}</strong></label>
-                    <span className="adm-muted">{when(o.createdAt)}</span>
+                    {o.date && <span className="adm-date">🗓 {formatDate(o.date)}</span>}
+                    <span className="adm-muted">ordered {when(o.createdAt)}</span>
                     {view !== "unpaid" && <span className={`adm-st adm-st-${o.fulfil}`}>{o.fulfil === "new" ? "To pack" : o.fulfil === "packed" ? "Packed" : "Delivered"}</span>}
                   </div>
                   <div className="adm-order-body">
