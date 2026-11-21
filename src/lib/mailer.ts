@@ -2,7 +2,7 @@
 // With neither, emails are skipped quietly — orders always show in the admin page.
 import nodemailer from "nodemailer";
 
-export type Mail = { to: string | string[]; subject: string; html: string; text: string; replyTo?: string };
+export type Mail = { to: string | string[]; subject: string; html: string; text: string; replyTo?: string; bcc?: string };
 
 let transport: nodemailer.Transporter | null = null;
 
@@ -28,7 +28,7 @@ export async function sendMail(m: Mail): Promise<boolean> {
     });
     await transport.sendMail({
       from: { name: "JoyJar 小胶傲", address: String(process.env.GMAIL_USER) },
-      to, subject: m.subject, html: m.html, text: m.text, replyTo: m.replyTo,
+      to, bcc: m.bcc || undefined, subject: m.subject, html: m.html, text: m.text, replyTo: m.replyTo,
     });
     return true;
   }
@@ -36,7 +36,7 @@ export async function sendMail(m: Mail): Promise<boolean> {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject: m.subject, html: m.html, text: m.text, reply_to: m.replyTo }),
+      body: JSON.stringify({ from: process.env.EMAIL_FROM, to, bcc: m.bcc || undefined, subject: m.subject, html: m.html, text: m.text, reply_to: m.replyTo }),
     });
     if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 200)}`);
     return true;

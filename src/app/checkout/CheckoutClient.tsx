@@ -39,7 +39,8 @@ function validate(form: any, region: string, date: string) {
   if (!form.name.trim()) e.name = "Add your name so we know who it's for.";
   if (!digits) e.phone = "Add a phone number so we can WhatsApp you about delivery.";
   else if (digits.length < 8) e.phone = "Looks like a digit or two is missing.";
-  if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Just double-check this email.";
+  if (!form.email.trim()) e.email = "Add your email so we can send your order confirmation.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Just double-check this email.";
   if (!form.addr.trim()) e.addr = "Add your street and block number.";
   if (!/^\d{6}$/.test((form.postal || "").trim())) e.postal = form.postal.trim() ? "Singapore postal codes have 6 digits." : "Add your 6-digit postal code.";
   if (!region) e.region = "Pick the region you're in.";
@@ -173,7 +174,7 @@ export function CheckoutClient({ products, bundles, deliveryConfig, member }: an
               <div className="field-grid">
                 <Field id="f-name" label="Full name" zh="姓名" value={form.name} onChange={set("name")} onBlur={blur("name")} placeholder="JoyJar" required error={err("name")} autoComplete="name" />
                 <Field id="f-phone" label="Phone" zh="电话" value={form.phone} onChange={set("phone")} onBlur={blur("phone")} placeholder="+65 8123 4567" type="tel" inputMode="tel" required error={err("phone")} autoComplete="tel" />
-                <Field id="f-email" label="Email" zh="邮箱" value={form.email} onChange={set("email")} onBlur={blur("email")} placeholder="joyjar@email.com" type="email" wide optional hint="For your order confirmation and delivery updates" error={err("email")} autoComplete="email" />
+                <Field id="f-email" label="Email" zh="邮箱" value={form.email} onChange={set("email")} onBlur={blur("email")} placeholder="joyjar@email.com" type="email" wide required hint="For your order confirmation and delivery updates" error={err("email")} autoComplete="email" />
               </div>
             </section>
 

@@ -22,6 +22,9 @@ export async function POST(request: Request) {
     if (!form.name || !form.phone || !form.addr || !/^\d{6}$/.test(String(form.postal || '').trim())) {
       return NextResponse.json({ error: 'Please fill in your name, phone, address and postal code.' }, { status: 400 });
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(form.email || '').trim())) {
+      return NextResponse.json({ error: 'Please add your email so we can send your order confirmation.' }, { status: 400 });
+    }
     const regionId = REGIONS.some((r) => r.id === region) ? String(region) : '';
     if (!regionId) return NextResponse.json({ error: 'Please choose your delivery region.' }, { status: 400 });
     if (!isDeliveryDate(String(date))) return NextResponse.json({ error: 'Please pick a delivery date from tomorrow onwards.' }, { status: 400 });

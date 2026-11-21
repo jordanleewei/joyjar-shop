@@ -29,7 +29,7 @@ function EmailCard({ email }: { email: EmailInfo }) {
         <li><b>On the way</b> → customer, when you tap “Mark packed”</li>
         <li><b>Delivered</b> → customer, when you tap “Mark delivered”</li>
       </ul>
-      <p className="adm-muted">Only customers who typed an email at checkout get emails. Each email is sent once per order.</p>
+      <p className="adm-muted">Every customer email is also copied to {email.inbox || "your inbox"}, so you have a record. Each email is sent once per order.</p>
       {email.provider && (
         <div className="prd-price-row">
           <label className="adm-field" style={{ flex: "1 1 220px" }}><span>Send a test to</span><input type="email" value={to} onChange={(e) => setTo(e.target.value)} /></label>

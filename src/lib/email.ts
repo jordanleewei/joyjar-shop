@@ -111,7 +111,7 @@ export async function sendStatusEmail(order: any, kind: "ship" | "done") {
       <p style="font-size:13px;color:#766c5f">Not going to be home? Just reply to this email or WhatsApp us.</p>`,
       `Order ${order.num} is on the way`);
     const text = `Hi ${first}, your JoyJar order ${order.num} is packed and on the way. We'll deliver it ${date ? "on " + date : "soon"} and WhatsApp you before we arrive.\n\n${lines.join("\n")}`;
-    await sendMail({ to: c.email, subject: `Your JoyJar order ${order.num} is on the way${date ? ` · ${date}` : ""}`, html, text, replyTo: reply });
+    await sendMail({ to: c.email, bcc: reply, subject: `Your JoyJar order ${order.num} is on the way${date ? ` · ${date}` : ""}`, html, text, replyTo: reply });
     return true;
   }
   const html = layout(`Delivered! Enjoy your JoyJar 💛`, `
@@ -121,7 +121,7 @@ export async function sendStatusEmail(order: any, kind: "ship" | "done") {
     ${order.memberId ? button(`${SITE()}/account#missions`, "Earn points with missions") : button(`${SITE()}/club`, "Join the JoyJar Club")}`,
     `Order ${order.num} delivered`);
   const text = `Hi ${first}, your JoyJar order ${order.num} has been delivered. Enjoy!\n\n${STORAGE}\n\nIf the lid button was already up when it arrived, please don't eat it: reply to this email and we'll sort it out.`;
-  await sendMail({ to: c.email, subject: `Delivered: your JoyJar order ${order.num}`, html, text, replyTo: reply });
+  await sendMail({ to: c.email, bcc: reply, subject: `Delivered: your JoyJar order ${order.num}`, html, text, replyTo: reply });
   return true;
 }
 
